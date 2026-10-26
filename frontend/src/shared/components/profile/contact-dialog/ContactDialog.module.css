@@ -1,0 +1,31 @@
+.description {
+  color: var(--dim);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.links {
+  display: grid;
+  gap: 10px;
+}
+.links a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.links a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.links a > svg:last-child {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.links p {
+  color: var(--dim);
+  font-size: 13px;
+}

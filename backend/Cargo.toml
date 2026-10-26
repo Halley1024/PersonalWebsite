@@ -1,0 +1,53 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2024"
+# 显式注册 HTTP 服务和 CLI，其他辅助文件不自动成为二进制。
+autobins = false
+
+[[bin]]
+name = "backend"
+path = "src/main.rs"
+
+[[bin]]
+name = "migrate"
+path = "src/bin/migrate.rs"
+
+[dependencies]
+axum = { version = "0.8.9", features = ["multipart"] }
+tokio = {version = "1.54.1", features = ["macros", "rt-multi-thread", "net", "fs", "io-util", "signal", "sync", "time"]}
+serde = {version = "1", features = ["derive"]}
+sqlx = {version = "0.8.6", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "migrate", "derive", "uuid", "chrono", "json"]}
+uuid = {version = "1", features = ["serde", "v4"]}
+chrono = {version = "0.4", features = ["serde"]}
+serde_json = "1"
+argon2 = "0.5"
+rand = "0.8"
+sha2 = "0.10"
+hmac = "0.12"
+subtle = "2"
+url = "2"
+ipnet = { version = "2", features = ["serde"] }
+pulldown-cmark = "0.13"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+rpassword = "7"
+fs2 = "0.4"
+tower = { version = "0.5", features = ["util"] }
+
+[[bin]]
+name = "admin-create"
+path = "src/bin/admin-create.rs"
+
+[[bin]]
+name = "admin-reset-password"
+path = "src/bin/admin-reset-password.rs"
+
+[[bin]]
+name = "access-rule-disable"
+path = "src/bin/access-rule-disable.rs"
+
+[[bin]]
+name = "maintenance"
+path = "src/bin/maintenance.rs"

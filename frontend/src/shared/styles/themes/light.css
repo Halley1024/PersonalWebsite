@@ -1,0 +1,165 @@
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f9fc;
+  --bg-soft: #f0f4f8;
+  --surface: #ffffff;
+  --surface-hover: #eaf2f3;
+  --border: rgba(15, 23, 42, 0.09);
+  --border-strong: rgba(15, 23, 42, 0.16);
+  --text: #182636;
+  --dim: #526275;
+  --faint: #69798c;
+  --accent: #0f766e;
+  --accent-soft: rgba(15, 118, 110, 0.08);
+  --blue: #2563eb;
+  --purple: #7c3aed;
+  --danger: #b91c1c;
+  --warn: #9a5b08;
+  --header-bg: rgba(248, 250, 252, 0.88);
+  --admin-header-bg: rgba(248, 250, 252, 0.94);
+  --sidebar-bg: #ffffff;
+  --panel-bg: #ffffff;
+  --panel-hover: #f0f7f6;
+  --panel-sheen: linear-gradient(145deg, #ffffff, #f5f8fa);
+  --subtle-fill: rgba(15, 23, 42, 0.025);
+  --secondary-fill: rgba(15, 23, 42, 0.035);
+  --hover-border: rgba(13, 148, 136, 0.38);
+  --weak-accent-border: rgba(13, 148, 136, 0.18);
+  --accent-border: rgba(13, 148, 136, 0.3);
+  --accent-muted: #0f9387;
+  --accent-hover: #0f766e;
+  --button-hover: #0f766e;
+  --login-button-hover: #0f766e;
+  --on-accent: #ffffff;
+  --on-danger: #ffffff;
+  --hero-title-gradient: linear-gradient(110deg, #16343e 15%, #0d9488);
+  --hero-role: #475569;
+  --secondary-text: #475569;
+  --markdown-text: #334155;
+  --code-bg: #f0f4f8;
+  --code-text: #0f766e;
+  --code-soft: rgba(13, 148, 136, 0.07);
+  --cover-bg: #e8f0f3;
+  --cover-placeholder:
+    radial-gradient(ellipse at 30% 20%, #14b8a612, transparent),
+    linear-gradient(135deg, #edf5f7, #dcefeb);
+  --project-placeholder:
+    radial-gradient(ellipse at 30% 20%, #14b8a620, transparent),
+    linear-gradient(135deg, #ecf2f7, #d9eeea);
+  --page-glow: rgba(13, 148, 136, 0.035);
+  --card-glow: rgba(13, 148, 136, 0.06);
+  --accent-glow: rgba(13, 148, 136, 0.22);
+  --ambient-accent: rgba(13, 148, 136, 0.045);
+  --ambient-blue: rgba(37, 99, 235, 0.035);
+  --ambient-mobile: rgba(13, 148, 136, 0.05);
+  --login-bg: linear-gradient(145deg, #ffffff, #f7fafc);
+  --login-faint: #64748b;
+  --login-border: rgba(15, 23, 42, 0.16);
+  --login-input-bg: #f8fafc;
+  --login-label: #334155;
+  --studio-bg: rgba(255, 255, 255, 0.9);
+  --studio-text: #334155;
+  --line-number: #94a3b8;
+  --hero-terminal-bg: linear-gradient(140deg, #ffffff, #eef5f7);
+  --hero-terminal-text: #0f766e;
+  --popover-shadow: 0 16px 50px #0f172a1a;
+  --card-shadow: 0 18px 55px #0f172a12;
+  --login-shadow: 0 24px 80px -35px rgba(15, 23, 42, 0.16);
+  --studio-shadow: 0 24px 55px -35px rgba(15, 23, 42, 0.2);
+  --dialog-shadow: 0 30px 100px #0f172a26;
+  --backdrop: rgba(15, 23, 42, 0.28);
+  --overlay: rgba(15, 23, 42, 0.3);
+  --notification-bg: #ecfdf5;
+  --notification-shadow: 0 12px 40px #0f172a1a;
+  --warning-soft: rgba(180, 83, 9, 0.07);
+  --danger-border: rgba(185, 28, 28, 0.2);
+  --danger-soft: rgba(185, 28, 28, 0.05);
+  --notice-border: rgba(13, 148, 136, 0.16);
+  --notice-bg: rgba(13, 148, 136, 0.04);
+  --particle-rgb: 28, 116, 153;
+  --particle-opacity: 0.55;
+  --particle-line-opacity: 0.24;
+  --particle-link-distance: 160;
+  --particle-line-width: 0.8;
+  --timeline-bg: linear-gradient(140deg, #eff8f6, #ffffff);
+  --spinner-track: rgba(255, 255, 255, 0.3);
+  --warning-border: rgba(154, 91, 8, 0.2);
+  --selection-bg: rgba(15, 118, 110, 0.18);
+}
+/* highlight.js GitHub syntax palette; original theme by github.com / @Hirse. */
+:root[data-theme="light"] .hljs {
+  color: #24292e;
+}
+:root[data-theme="light"] .hljs-doctag,
+:root[data-theme="light"] .hljs-keyword,
+:root[data-theme="light"] .hljs-meta .hljs-keyword,
+:root[data-theme="light"] .hljs-template-tag,
+:root[data-theme="light"] .hljs-template-variable,
+:root[data-theme="light"] .hljs-type,
+:root[data-theme="light"] .hljs-variable.language_ {
+  color: #d73a49;
+}
+:root[data-theme="light"] .hljs-title,
+:root[data-theme="light"] .hljs-title.class_,
+:root[data-theme="light"] .hljs-title.class_.inherited__,
+:root[data-theme="light"] .hljs-title.function_ {
+  color: #6f42c1;
+}
+:root[data-theme="light"] .hljs-attr,
+:root[data-theme="light"] .hljs-attribute,
+:root[data-theme="light"] .hljs-literal,
+:root[data-theme="light"] .hljs-meta,
+:root[data-theme="light"] .hljs-number,
+:root[data-theme="light"] .hljs-operator,
+:root[data-theme="light"] .hljs-variable,
+:root[data-theme="light"] .hljs-selector-attr,
+:root[data-theme="light"] .hljs-selector-class,
+:root[data-theme="light"] .hljs-selector-id {
+  color: #005cc5;
+}
+:root[data-theme="light"] .hljs-regexp,
+:root[data-theme="light"] .hljs-string,
+:root[data-theme="light"] .hljs-meta .hljs-string {
+  color: #032f62;
+}
+:root[data-theme="light"] .hljs-built_in,
+:root[data-theme="light"] .hljs-symbol {
+  color: #e36209;
+}
+:root[data-theme="light"] .hljs-comment,
+:root[data-theme="light"] .hljs-code,
+:root[data-theme="light"] .hljs-formula {
+  color: #6a737d;
+}
+:root[data-theme="light"] .hljs-name,
+:root[data-theme="light"] .hljs-quote,
+:root[data-theme="light"] .hljs-selector-tag,
+:root[data-theme="light"] .hljs-selector-pseudo {
+  color: #22863a;
+}
+:root[data-theme="light"] .hljs-subst {
+  color: #24292e;
+}
+:root[data-theme="light"] .hljs-section {
+  color: #005cc5;
+  font-weight: bold;
+}
+:root[data-theme="light"] .hljs-bullet {
+  color: #735c0f;
+}
+:root[data-theme="light"] .hljs-emphasis {
+  color: #24292e;
+  font-style: italic;
+}
+:root[data-theme="light"] .hljs-strong {
+  color: #24292e;
+  font-weight: bold;
+}
+:root[data-theme="light"] .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+:root[data-theme="light"] .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}

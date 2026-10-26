@@ -1,0 +1,19 @@
+.view {
+  padding: 100px 0;
+  text-align: center;
+}
+.view > span {
+  font: 12px var(--mono);
+  color: var(--accent);
+}
+.view h1 {
+  margin: 24px 0;
+  font-size: clamp(25px, 4vw, 42px);
+}
+.view p {
+  color: var(--dim);
+  margin-bottom: 28px;
+}
+.view a {
+  color: var(--accent);
+}

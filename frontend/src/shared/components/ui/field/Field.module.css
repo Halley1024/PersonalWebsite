@@ -1,0 +1,22 @@
+.field {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+.field label {
+  font-size: 12px;
+  color: var(--dim);
+  font-weight: 500;
+}
+.field small {
+  color: var(--faint);
+  font-size: 11px;
+}
+.field .error {
+  color: var(--danger);
+  font-size: 12px;
+}
+.field [aria-invalid="true"] {
+  border-color: var(--danger);
+}

@@ -1,0 +1,141 @@
+.page {
+  display: grid;
+  gap: 22px;
+}
+.page > div:first-child {
+  margin-bottom: 0;
+}
+.page select {
+  width: auto;
+}
+.notice {
+  border: 1px solid var(--notice-border);
+  background: var(--notice-bg);
+  border-radius: 9px;
+  padding: 12px 16px;
+  color: var(--dim);
+  font-size: 11px;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.metrics section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 22px;
+  display: grid;
+  gap: 10px;
+}
+.metrics span {
+  font-size: 11px;
+  color: var(--dim);
+}
+.metrics strong {
+  font: 32px var(--mono);
+  letter-spacing: -0.05em;
+}
+.metrics small {
+  color: var(--faint);
+  font-size: 10px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 22px;
+}
+.total {
+  font: 32px var(--mono);
+}
+.total small {
+  font: 11px var(--sans);
+  color: var(--faint);
+}
+.bars {
+  display: grid;
+  gap: 20px;
+  padding: 20px 0;
+}
+.bars p {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--dim);
+}
+.bars > div > div {
+  height: 5px;
+  background: var(--bg-soft);
+  border-radius: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.bars i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 5px;
+}
+.bars > p,
+.ranking > p {
+  color: var(--faint);
+  font-size: 12px;
+}
+.ranking {
+  display: grid;
+}
+.ranking > div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.ranking span {
+  font: 11px var(--mono);
+  color: var(--faint);
+}
+.ranking a {
+  flex: 1;
+}
+.ranking small {
+  color: var(--accent);
+}
+.counts {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.counts a {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--dim);
+}
+.counts strong {
+  font: 25px var(--mono);
+  color: var(--text);
+}
+@media (max-width: 1100px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .metrics {
+    gap: 10px;
+  }
+  .metrics section {
+    padding: 16px;
+  }
+  .metrics strong {
+    font-size: 26px;
+  }
+}

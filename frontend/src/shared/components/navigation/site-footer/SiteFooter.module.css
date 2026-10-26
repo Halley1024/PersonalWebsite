@@ -1,0 +1,25 @@
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 30px max(24px, calc((100vw - 1200px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  color: var(--faint);
+  font-size: 11px;
+  position: relative;
+}
+.footer > div {
+  display: flex;
+  gap: 22px;
+}
+.footer a:hover {
+  color: var(--accent);
+}
+@media (max-width: 700px) {
+  .footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}

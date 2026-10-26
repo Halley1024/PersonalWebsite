@@ -1,0 +1,32 @@
+.stack {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 300;
+  display: grid;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 420px;
+  padding: 15px 18px;
+  background: var(--notification-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  box-shadow: var(--notification-shadow);
+  color: var(--text);
+  font-size: 13px;
+}
+.toast > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.toast button {
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+  padding: 3px;
+}

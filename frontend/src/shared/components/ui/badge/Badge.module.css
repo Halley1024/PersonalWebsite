@@ -1,0 +1,20 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--warn);
+  background: var(--warning-soft);
+}
+.good {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--weak-accent-border);
+}
+.dim {
+  color: var(--dim);
+  background: var(--surface-hover);
+}

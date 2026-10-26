@@ -1,0 +1,19 @@
+# build
+
+node_modules/
+target/
+
+# docs
+docs/pages/
+
+# CONFIG
+/backend/.env
+
+# 后端本地媒体、开发密钥与运维秘密
+/backend/data/
+/backend/.secrets/
+
+# AI target
+.codex
+.aws
+.agents

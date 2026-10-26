@@ -1,0 +1,10 @@
+.upload {
+  display: grid;
+  gap: 15px;
+  padding: 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+}
+.upload > button {
+  justify-self: start;
+}

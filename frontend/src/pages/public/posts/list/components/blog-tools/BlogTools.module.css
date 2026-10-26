@@ -1,0 +1,113 @@
+.tools {
+  margin-top: 30px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel-bg);
+  scroll-margin-top: 90px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.searchField {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  max-width: 520px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--dim);
+}
+.searchField:focus-within {
+  border-color: var(--accent);
+}
+.tools .searchField input[type="search"] {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  box-shadow: none;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.searchField input::placeholder {
+  color: var(--faint);
+}
+.controlButton,
+.tag {
+  border: 1px solid var(--border-strong);
+  background: var(--panel-bg);
+  color: var(--dim);
+  border-radius: 9px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.controlButton {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.controlButton:hover,
+.tag:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.tag[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+.error {
+  margin-top: 12px;
+  color: var(--warn);
+  font-size: 12px;
+}
+@media (min-width: 961px) {
+  .tools {
+    flex-shrink: 0;
+    margin-top: 18px;
+    padding: 14px 18px;
+  }
+  .tags {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+  .tag {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 640px) {
+  .tools {
+    padding: 16px;
+  }
+  .toolbar {
+    flex-wrap: wrap;
+  }
+  .searchField {
+    max-width: none;
+  }
+  .toolbar > .controlButton:last-child:not([type="submit"]) {
+    margin-left: auto;
+  }
+}

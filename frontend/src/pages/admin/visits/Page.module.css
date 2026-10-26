@@ -1,0 +1,20 @@
+.page {
+  min-width: 0;
+}
+.dates {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.dates label {
+  font-size: 11px;
+  color: var(--dim);
+  display: grid;
+  gap: 6px;
+}
+.dates span {
+  font-size: 11px;
+  color: var(--faint);
+}

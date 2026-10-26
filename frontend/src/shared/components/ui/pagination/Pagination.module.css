@@ -1,0 +1,13 @@
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  color: var(--dim);
+  font-size: 12px;
+  margin: 26px 0;
+}
+.pagination > div {
+  display: flex;
+  gap: 8px;
+}

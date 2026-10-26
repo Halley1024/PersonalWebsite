@@ -1,0 +1,18 @@
+.editor {
+  min-width: 0;
+}
+.intro {
+  margin-top: 20px;
+}
+.avatar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+}
+.avatar img {
+  height: 64px;
+  width: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}

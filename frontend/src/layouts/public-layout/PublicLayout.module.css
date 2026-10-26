@@ -1,0 +1,23 @@
+.layout {
+  min-height: 100dvh;
+  position: relative;
+  isolation: isolate;
+  background: radial-gradient(
+    ellipse at 75% 15%,
+    var(--page-glow),
+    transparent 48%
+  );
+}
+.main {
+  --public-page-top-padding: 126px;
+  max-width: 1264px;
+  margin: auto;
+  padding: var(--public-page-top-padding) 32px 80px;
+  min-height: calc(100dvh - 100px);
+}
+@media (max-width: 650px) {
+  .main {
+    --public-page-top-padding: 105px;
+    padding: var(--public-page-top-padding) 20px 50px;
+  }
+}
