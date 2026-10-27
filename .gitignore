@@ -2,6 +2,9 @@
 
 node_modules/
 target/
+.secrets/
+.vscode/
+.idea/
 
 # docs
 docs/pages/

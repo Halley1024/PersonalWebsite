@@ -3,7 +3,7 @@ use tokio::net::TcpListener;
 use tracing_subscriber::EnvFilter;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
+    tracing_subscriber::fmt() // 创建一个日志输出器
         .with_env_filter(
             EnvFilter::try_from_default_env().unwrap_or(EnvFilter::try_new(
                 std::env::var("LOG_LEVEL").unwrap_or_else(|_| "info".into()),
@@ -11,8 +11,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .json()
         .init();
-    let config = Config::from_env()?;
-    let state = AppState::new(&config).await?;
+
+    let config = Config::from_env()?; // 加载进程配置文件，其中分了deployment、production和test三种环境
+
+    let state = AppState::new(&config).await?; // 注册后端进程的状态
     let listener = TcpListener::bind(config.bind_addr).await?;
     tracing::info!(address=%listener.local_addr()?,"HTTP 服务已启动");
     let application = app::build_app(state.clone());
