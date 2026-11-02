@@ -8,7 +8,6 @@ target/
 
 # docs
 docs/pages/
-docs/images/
 # CONFIG
 /backend/.env*
 
