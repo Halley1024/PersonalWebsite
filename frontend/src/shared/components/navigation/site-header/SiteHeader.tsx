@@ -4,9 +4,11 @@ import { Link, NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import type { NavigationItem } from "../types";
 import { usePublicProfile } from "../../../queries/profile";
+import { ContactDialog } from "../../profile/contact-dialog/ContactDialog";
 import styles from "./SiteHeader.module.css";
 export function SiteHeader({ items }: { items: NavigationItem[] }) {
   const [open, setOpen] = useState(false);
+  const [contact, setContact] = useState(false);
   const profile = usePublicProfile();
   return (
     <header className={styles.header}>
@@ -18,6 +20,17 @@ export function SiteHeader({ items }: { items: NavigationItem[] }) {
         </span>
       </Link>
       <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.contactButton}
+          disabled={!profile.data}
+          onClick={() => {
+            setOpen(false);
+            setContact(true);
+          }}
+        >
+          联系我
+        </button>
         <ThemeToggle />
         <button
           className={styles.toggle}
@@ -47,6 +60,13 @@ export function SiteHeader({ items }: { items: NavigationItem[] }) {
           </NavLink>
         ))}
       </nav>
+      {profile.data && (
+        <ContactDialog
+          open={contact}
+          onClose={() => setContact(false)}
+          profile={profile.data}
+        />
+      )}
     </header>
   );
 }

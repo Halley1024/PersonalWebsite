@@ -18,26 +18,33 @@ pub async fn analytics_repository(
     previous: DateTime<Utc>,
     first_date: NaiveDate,
     last_date: NaiveDate,
+    monthly: bool,
 ) -> AppResult<Value> {
     let mut tx = pool.begin().await?;
     sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
         .execute(&mut *tx)
         .await?;
-    let(pv,uv):(i64,i64)=sqlx::query_as("SELECT count(*),count(DISTINCT visitor_hash) FROM visit_events WHERE occurred_at>=$1 AND occurred_at<$2").bind(start).bind(end).fetch_one(&mut *tx).await?;
-    let(old_pv,old_uv):(i64,i64)=sqlx::query_as("SELECT count(*),count(DISTINCT visitor_hash) FROM visit_events WHERE occurred_at>=$1 AND occurred_at<$2").bind(previous).bind(start).fetch_one(&mut *tx).await?;
+    let(pv,uv):(i64,i64)=sqlx::query_as("SELECT count(*),count(DISTINCT visitor_hash) FROM analytics_events WHERE occurred_at>=$1 AND occurred_at<$2").bind(start).bind(end).fetch_one(&mut *tx).await?;
+    let(old_pv,old_uv):(i64,i64)=sqlx::query_as("SELECT count(*),count(DISTINCT visitor_hash) FROM analytics_events WHERE occurred_at>=$1 AND occurred_at<$2").bind(previous).bind(start).fetch_one(&mut *tx).await?;
     let series:Vec<(Value,)>=sqlx::query_as(r#"
-            SELECT jsonb_build_object('date',d::date,'pv',count(v.id),'uv',count(DISTINCT v.visitor_hash)) 
-            FROM generate_series($1::date::timestamp,$2::date::timestamp,interval '1 day') d 
-            LEFT 
-            JOIN visit_events v 
-            ON (v.occurred_at AT TIME ZONE 'Asia/Shanghai')::date=d::date 
-            GROUP BY d 
-            ORDER BY d
-            "#).bind(first_date).bind(last_date).fetch_all(&mut *tx).await?;
+            WITH buckets AS (
+                SELECT d, LEAST(d + CASE WHEN $3 THEN interval '1 month' ELSE interval '1 day' END,
+                    $2::date::timestamp + interval '1 day') AS next_date
+                FROM generate_series($1::date::timestamp,
+                    CASE WHEN $3 THEN date_trunc('month', $2::date::timestamp) ELSE $2::date::timestamp END,
+                    CASE WHEN $3 THEN interval '1 month' ELSE interval '1 day' END) d
+            )
+            SELECT jsonb_build_object('date',d::date,'pv',count(v.event_id),'uv',count(DISTINCT v.visitor_hash))
+            FROM buckets
+            LEFT JOIN analytics_events v
+                ON v.occurred_at >= (d AT TIME ZONE 'Asia/Shanghai')
+                AND v.occurred_at < (next_date AT TIME ZONE 'Asia/Shanghai')
+            GROUP BY d ORDER BY d
+            "#).bind(first_date).bind(last_date).bind(monthly).fetch_all(&mut *tx).await?;
     let sources: Vec<(Value,)> = sqlx::query_as(
         r#"
             SELECT jsonb_build_object('source',source,'pv',count(*)) 
-            FROM visit_events 
+            FROM analytics_events
             WHERE occurred_at>=$1 
             AND occurred_at<$2 
             GROUP BY source 
@@ -51,7 +58,7 @@ pub async fn analytics_repository(
     let devices: Vec<(Value,)> = sqlx::query_as(
         r#"
             SELECT jsonb_build_object('device',device,'pv',count(*)) 
-            FROM visit_events 
+            FROM analytics_events
             WHERE occurred_at>=$1 
             AND occurred_at<$2 
             GROUP BY device 
@@ -64,7 +71,7 @@ pub async fn analytics_repository(
     .await?;
     let popular:Vec<(Value,)>=sqlx::query_as(r#"
             SELECT jsonb_build_object('content_id',c.id,'kind',c.kind,'slug',c.slug,'title',c.title,'pv',count(*)) 
-            FROM visit_events v 
+            FROM analytics_events v
             JOIN content_items c 
             ON c.id=v.content_id 
             WHERE v.occurred_at>=$1 
@@ -148,6 +155,17 @@ pub async fn maintenance_records_repository(
             .execute(&mut *tx)
             .await?
             .rows_affected();
+    // Keep only non-IP analytics fields for annual totals and equal-length comparisons.
+    let history_start = today - chrono::Duration::days(729);
+    sqlx::query("INSERT INTO analytics_history(event_id,occurred_at,visitor_hash,content_id,source,device) SELECT event_id,occurred_at,visitor_hash,content_id,source,device FROM visit_events WHERE occurred_at >= $1 AND occurred_at < $2 ON CONFLICT(event_id) DO NOTHING")
+        .bind(super::service::midnight(history_start))
+        .bind(super::service::midnight(first))
+        .execute(&mut *tx)
+        .await?;
+    sqlx::query("DELETE FROM analytics_history WHERE occurred_at < $1")
+        .bind(super::service::midnight(history_start))
+        .execute(&mut *tx)
+        .await?;
     let events = sqlx::query(
         "DELETE FROM visit_events WHERE (occurred_at AT TIME ZONE 'Asia/Shanghai')::date<$1",
     )
@@ -194,4 +212,113 @@ pub async fn maintenance_records_repository(
     .await?;
     tx.commit().await?;
     Ok((sessions, events, audit))
+}
+
+#[cfg(test)]
+mod annual_tests {
+    use super::*;
+    use crate::modules::analytics::service::midnight;
+
+    #[tokio::test]
+    #[ignore = "requires TEST_DATABASE_URL pointing to an independent empty database"]
+    async fn monthly_uv_and_archive_preserve_totals_without_ip() {
+        let url = std::env::var("TEST_DATABASE_URL").unwrap();
+        assert_ne!(url, std::env::var("DATABASE_URL").unwrap_or_default());
+        let pool = PgPool::connect(&url).await.unwrap();
+        let count: i64 = sqlx::query_scalar(
+            "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(
+            count, 0,
+            "only an independent empty test database is allowed"
+        );
+        sqlx::migrate::Migrator::new(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("migrations"),
+        )
+        .await
+        .unwrap()
+        .run(&pool)
+        .await
+        .unwrap();
+        let now: NaiveDate = "2026-11-02".parse().unwrap();
+        for date in [
+            "2025-11-30",
+            "2025-12-01",
+            "2026-01-01",
+            "2026-01-02",
+            "2026-11-02",
+            "2026-11-03",
+            "2024-01-01",
+        ] {
+            let date = midnight(date.parse().unwrap());
+            sqlx::query("INSERT INTO visit_events(id,event_id,occurred_at,visitor_hash,hash_key_version,client_ip,region_id,region_label,page_path,page_title,source,device) VALUES($1,$2,$3,$4,1,'127.0.0.1','unknown','unknown','/','home','direct','desktop')")
+                .bind(uuid::Uuid::new_v4()).bind(uuid::Uuid::new_v4()).bind(date).bind(vec![1u8]).execute(&pool).await.unwrap();
+        }
+        let first: NaiveDate = "2025-12-01".parse().unwrap();
+        let end = midnight(now + chrono::Duration::days(1));
+        let previous = midnight(first - chrono::Duration::days((now - first).num_days() + 1));
+        let before = analytics_repository(&pool, midnight(first), end, previous, first, now, true)
+            .await
+            .unwrap();
+        assert_eq!(before["pv"], 4);
+        assert_eq!(before["uv"], 1);
+        let series = before["series"].as_array().unwrap();
+        assert_eq!(series.len(), 12);
+        assert_eq!(series[1]["pv"], 2);
+        assert_eq!(
+            series[1]["uv"], 1,
+            "monthly UV must deduplicate across days"
+        );
+        assert_eq!(series[2]["pv"], 0, "empty months are zero filled");
+        assert_eq!(
+            series[11]["pv"], 1,
+            "exclude tomorrow even in current month"
+        );
+        maintenance_records_repository(&pool, midnight(now))
+            .await
+            .unwrap();
+        maintenance_records_repository(&pool, midnight(now))
+            .await
+            .unwrap();
+        let after = analytics_repository(&pool, midnight(first), end, previous, first, now, true)
+            .await
+            .unwrap();
+        assert_eq!(
+            before, after,
+            "archive must preserve all counts and be idempotent"
+        );
+        let columns: Vec<String> = sqlx::query_scalar("SELECT column_name FROM information_schema.columns WHERE table_name='analytics_history'")
+            .fetch_all(&pool).await.unwrap();
+        assert!(
+            !columns
+                .iter()
+                .any(|c| c.contains("ip") || c.contains("region") || c.contains("path"))
+        );
+        let old: i64 =
+            sqlx::query_scalar("SELECT count(*) FROM analytics_events WHERE occurred_at < $1")
+                .bind(midnight(now - chrono::Duration::days(729)))
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+        assert_eq!(old, 0);
+        for days in [7, 30] {
+            let start = now - chrono::Duration::days(days - 1);
+            let result = analytics_repository(
+                &pool,
+                midnight(start),
+                end,
+                midnight(start - chrono::Duration::days(days)),
+                start,
+                now,
+                false,
+            )
+            .await
+            .unwrap();
+            assert_eq!(result["series"].as_array().unwrap().len(), days as usize);
+        }
+        pool.close().await;
+    }
 }

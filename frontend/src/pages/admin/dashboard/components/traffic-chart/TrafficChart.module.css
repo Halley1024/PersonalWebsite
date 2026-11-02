@@ -1,30 +1,14 @@
-.chart {
-  color: var(--dim);
-}
-.chart svg {
-  width: 100%;
-  height: auto;
-  margin: 20px 0;
-}
-.legend {
-  display: flex;
-  gap: 20px;
-  font-size: 11px;
-}
-.legend span:first-child {
-  color: var(--accent);
-}
-.legend span:last-child {
-  color: var(--blue);
-}
-.chart summary {
-  font-size: 11px;
-  cursor: pointer;
-}
-.data {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
-  padding: 12px 0;
-  font: 10px var(--mono);
-}
+.chart { color: var(--dim); }
+.plot { overflow-x: auto; }
+.plot svg { width: 100%; height: auto; display: block; min-width: 440px; }
+.plot text { fill: var(--faint); font: 12px var(--mono); }
+.point { outline: none; }
+.point:hover, .point:focus-visible { r: 5; stroke: var(--text); stroke-width: 2; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--dim); padding-top: 4px; }
+.legend span { display: flex; align-items: center; gap: 5px; }
+.legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.legend span:last-child i { background: var(--blue); }
+.footnote { color: var(--faint); font-size: 12px; line-height: 1.7; margin: 9px 0 12px; }
+.chart summary { font-size: 12px; cursor: pointer; }
+.data { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px 0; font: 12px/1.6 var(--mono); }
+@media (max-width: 600px) { .data { grid-template-columns: minmax(0, 1fr); } }

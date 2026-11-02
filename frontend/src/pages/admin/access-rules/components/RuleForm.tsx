@@ -8,6 +8,7 @@ import { Field } from "../../../../shared/components/ui/field/Field";
 import { Button } from "../../../../shared/components/ui/button/Button";
 import { ErrorNotice } from "../../../../shared/components/ui/error-notice/ErrorNotice";
 import forms from "../../../../shared/styles/forms.module.css";
+import styles from "./RuleForm.module.css";
 export function RuleForm({
   item,
   defaults,
@@ -64,8 +65,8 @@ export function RuleForm({
     }
   }
   return (
-    <>
-      <fieldset disabled={busy} className={forms.stack}>
+    <div className={styles.form}>
+      <fieldset disabled={busy} className={`${forms.stack} ${styles.fields}`}>
         <Field label="封锁类型">
           <select
             value={value.scope}
@@ -136,7 +137,7 @@ export function RuleForm({
             onChange={(e) => setValue({ ...value, reason: e.target.value })}
           />
         </Field>
-        <label className={forms.checkbox}>
+        <label className={`${forms.checkbox} ${styles.enabled}`}>
           <input
             type="checkbox"
             checked={value.enabled}
@@ -147,15 +148,16 @@ export function RuleForm({
       </fieldset>
       <ErrorNotice error={error} />
       <ErrorNotice error={regions.error} />
-      <p className={forms.hint}>
+      <p className={styles.hint}>
         已有规则不能更改封锁对象；如需更改，请新建规则。解除 IP
         后仍可能受区域规则限制。
       </p>
-      <div className={forms.actions}>
+      <div className={styles.actions}>
+        <Button variant="ghost" disabled={busy} onClick={onDone}>取消</Button>
         <Button loading={busy} onClick={() => void save()}>
           保存规则
         </Button>
       </div>
-    </>
+    </div>
   );
 }

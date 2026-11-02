@@ -8,9 +8,9 @@ target/
 
 # docs
 docs/pages/
-
+docs/images/
 # CONFIG
-/backend/.env
+/backend/.env*
 
 # 后端本地媒体、开发密钥与运维秘密
 /backend/data/

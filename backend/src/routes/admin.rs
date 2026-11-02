@@ -58,7 +58,12 @@ pub fn router() -> Router<AppState> {
                 .delete(taxonomy::handler::delete_tag_handler),
         )
         .route("/admin/media", get(media::handler::list_media_handler))
+        .route("/admin/media/stats", get(media::handler::stats_handler))
         .route("/admin/media/{id}", delete(media::handler::delete_handler))
+        .route(
+            "/admin/contents/{id}/taxonomy",
+            put(content::handler::taxonomy_handler),
+        )
         .route(
             "/admin/dashboard",
             get(dashboard::handler::get_dashboard_handler),

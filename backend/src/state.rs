@@ -23,11 +23,15 @@ pub struct AppState {
     pub visitor_key: Arc<Vec<u8>>,                           // HMAC 密钥，不输出到响应或日志。
     pub geo: Arc<GeoLookup>,                                 // 本地归属地快照。
 }
+/// 根据Config提供的配置，创建路由状态
+///
 impl AppState {
     pub async fn new(config: &Config) -> Result<Self, Box<dyn std::error::Error>> {
+        // 设置共享的数据库，并且设一些连接配置，然后通过链式调用来启动数据库。其中设置了一个异步定时器来限制数据库连接时长
         let db = PgPoolOptions::new()
             .max_connections(config.database_pool_size)
             .after_connect(|connection, _| {
+                // 在连接池连接数据库之后执行一个回调函数，回调函数通过这个新连接执行 SQL，把当前数据库会话的时区设为 UTC
                 Box::pin(async move {
                     sqlx::query("SET TIME ZONE 'UTC'")
                         .execute(connection)
@@ -38,8 +42,11 @@ impl AppState {
             .acquire_timeout(Duration::from_secs(config.database_acquire_timeout))
             .connect(&config.database_url)
             .await?;
+        // 测试数据是否创建并连接成功，如果成失败则直接返回
         sqlx::query("SELECT 1").execute(&db).await?;
+        // 创建文件目录，create_dir_all会自动补全确实的文件
         tokio::fs::create_dir_all(config.media_root.join(".tmp")).await?;
+
         // 写入探针验证媒体目录可读写，不依赖仅检查目录是否存在。
         let probe = config
             .media_root

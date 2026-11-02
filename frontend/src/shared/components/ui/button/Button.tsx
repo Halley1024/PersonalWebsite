@@ -30,11 +30,11 @@ export function Button({
     </button>
   );
 }
-export function ButtonLink({ className = "", ...props }: LinkProps) {
+export function ButtonLink({ variant = "ghost", className = "", ...props }: LinkProps & { variant?: Props["variant"] }) {
   return (
     <Link
       {...props}
-      className={`${styles.button} ${styles.ghost} ${className}`}
+      className={`${styles.button} ${styles[variant]} ${className}`}
     />
   );
 }

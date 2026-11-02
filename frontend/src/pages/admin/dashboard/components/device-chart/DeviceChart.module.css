@@ -1,0 +1,7 @@
+.device svg { display: block; width: 190px; max-width: 100%; height: auto; margin: 0 auto; }
+.value { fill: var(--text); font: 500 28px var(--mono); }
+.label { fill: var(--faint); font: 12px var(--sans); }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 18px; padding-top: 18px; }
+.legend span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--dim); }
+.legend i { width: 7px; height: 7px; border-radius: 50%; }
+.legend strong { font: 12px var(--mono); color: var(--text); }

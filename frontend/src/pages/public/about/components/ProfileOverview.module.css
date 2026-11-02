@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  margin-bottom: 25px;
+  margin: 24px 0 28px;
 }
 .identity img,
 .avatar {
@@ -26,6 +26,10 @@
 .identity h2 {
   font-size: 30px;
 }
+.identity > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .identity p {
   color: var(--dim);
   font-size: 13px;
@@ -39,68 +43,144 @@
   font-size: 11px;
   margin-top: 6px;
 }
+.heading h1 {
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
 .intro {
-  color: var(--secondary-text);
-  font-size: 17px;
-  line-height: 1.9;
-  margin-bottom: 26px;
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 6px 0 28px;
+  max-width: 60ch;
   white-space: pre-wrap;
+}
+.bio > div {
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.bio p {
+  margin: 0 0 16px;
+  max-width: 60ch;
+}
+.bio strong {
+  color: var(--text);
+  font-weight: 500;
 }
 .muted {
   color: var(--faint);
   font-size: 13px;
 }
 .stats {
-  display: flex;
-  gap: 35px;
-  margin: 32px 0;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
 }
 .stats > div {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
 }
 .stats strong {
-  font: 30px var(--mono);
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
   color: var(--accent);
+  overflow-wrap: anywhere;
 }
 .stats span {
-  font-size: 10px;
-  color: var(--faint);
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--dim);
 }
 .skills {
-  margin: 36px 0;
+  margin-top: 40px;
 }
 .label {
-  font: 10px var(--mono);
-  color: var(--accent);
-  letter-spacing: 0.13em;
-}
-.skills section {
-  margin-top: 20px;
-}
-.skills h3 {
-  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  font: 13px/1.6 var(--mono);
+  color: var(--accent);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.label::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--accent);
+}
+.skills section {
+  margin-bottom: 26px;
+}
+.skills section:last-child {
+  margin-bottom: 0;
+}
+.skills h3 {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 .skills h3 > span {
-  font: 10px var(--mono);
-  color: var(--faint);
+  font: 13px var(--mono);
+  color: var(--accent);
 }
 .skills section > div {
   display: flex;
-  gap: 7px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 .skills section > div > span {
   border: 1px solid var(--border);
-  background: var(--secondary-fill);
-  padding: 5px 10px;
-  border-radius: 7px;
-  font: 11px var(--mono);
+  background: var(--surface);
+  padding: 7px 14px;
+  border-radius: 9px;
+  font: 13px/1.6 var(--mono);
   color: var(--dim);
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  transition: color 0.2s, border-color 0.2s, transform 0.15s;
 }
+.skills section > div > span:hover {
+  color: var(--accent);
+  border-color: var(--hover-border);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+:global(:root[data-theme="light"]) .bio strong {
+  color: #111111;
+  font-weight: 700;
+}
+
+.compact .identity { gap: 14px; margin: 22px 0; }
+.compact .identity img, .compact .avatar { width: 64px; height: 64px; border-radius: 14px; }
+.compact .identity h2 { font-size: 24px; }
+.compact .identity p { font-size: 14px; }
+.compact .identity small { font-size: 12px; }
+.compact .heading h1 { font-size: 28px; }
+.compact .intro, .compact .bio > div { font-size: 14px; line-height: 1.8; }
+.compact .stats { gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.compact .stats > div { padding: 12px 10px; }
+.compact .stats strong { font-size: 24px; }
+.compact .stats span { font-size: 12px; line-height: 1.7; }
+.compact .skills section > div > span { padding: 6px 9px; font-size: 12px; }
+.compact .label { font-size: 12px; }

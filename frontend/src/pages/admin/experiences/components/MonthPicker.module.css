@@ -1,0 +1,15 @@
+.trigger { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 11px 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-soft); color: var(--text); font: 14px var(--mono); text-align: left; }
+.trigger svg { color: var(--dim); flex-shrink: 0; }
+.trigger:disabled { opacity: .4; cursor: not-allowed; }
+.trigger:focus-visible, .calendar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.calendar { max-width: 340px; margin: auto; }
+.year { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.year button { display: grid; place-items: center; width: 36px; height: 36px; color: var(--dim); border-radius: 7px; }
+.year select { width: auto; font-size: 14px; }
+.months { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.months button { min-height: 44px; border-radius: 8px; color: var(--dim); font-size: 14px; }
+.months button[aria-current="date"] { box-shadow: inset 0 0 0 1px var(--accent-muted); }
+.months button[aria-pressed="true"] { color: var(--on-accent); background: var(--accent); }
+.months button:not(:disabled):not([aria-pressed="true"]):hover { background: var(--accent-soft); color: var(--accent); }
+.calendar button:disabled { opacity: .25; cursor: not-allowed; }
+.calendar p { color: var(--faint); font-size: 12px; line-height: 1.8; margin-top: 20px; }

@@ -11,7 +11,7 @@ use crate::{
     state::AppState,
 };
 use axum::http::HeaderMap;
-use chrono::{DateTime, Duration, FixedOffset, NaiveDate, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Duration, FixedOffset, Months, NaiveDate, TimeZone, Utc};
 use hmac::{Hmac, Mac};
 use serde_json::Value;
 use sha2::Sha256;
@@ -148,20 +148,52 @@ pub async fn record_pageview_service(
     }))
 }
 pub async fn analytics_service(s: &AppState, days: i64) -> AppResult<Value> {
-    if ![7, 30].contains(&days) {
-        return Err(AppError::bad());
-    }
     let end = today(s.clock.now());
-    let first = end - Duration::days(days - 1);
+    let first = analytics_start(end, days)?;
+    let window_days = (end - first).num_days() + 1;
     repository::analytics_repository(
         &s.db,
         midnight(first),
         midnight(end + Duration::days(1)),
-        midnight(first - Duration::days(days)),
+        midnight(first - Duration::days(window_days)),
         first,
         end,
+        days == 365,
     )
     .await
+}
+
+fn analytics_start(end: NaiveDate, days: i64) -> AppResult<NaiveDate> {
+    match days {
+        7 | 30 => Ok(end - Duration::days(days - 1)),
+        365 => Ok(end.with_day(1).unwrap() - Months::new(11)),
+        _ => Err(AppError::bad()),
+    }
+}
+
+#[cfg(test)]
+mod analytics_window_tests {
+    use super::*;
+
+    #[test]
+    fn daily_windows_include_today_and_month_is_always_thirty_days() {
+        let end = NaiveDate::from_ymd_opt(2024, 3, 1).unwrap();
+        assert_eq!(analytics_start(end, 7).unwrap().to_string(), "2024-02-24");
+        assert_eq!(analytics_start(end, 30).unwrap().to_string(), "2024-02-01");
+        assert!(analytics_start(end, 8).is_err());
+    }
+
+    #[test]
+    fn annual_window_has_twelve_calendar_months_even_on_leap_day() {
+        for (end, first) in [
+            ("2024-02-29", "2023-03-01"),
+            ("2026-11-02", "2025-12-01"),
+            ("2026-01-31", "2025-02-01"),
+        ] {
+            let end = end.parse::<NaiveDate>().unwrap();
+            assert_eq!(analytics_start(end, 365).unwrap().to_string(), first);
+        }
+    }
 }
 pub async fn visits_service(
     s: &AppState,
@@ -170,15 +202,7 @@ pub async fn visits_service(
     offset: i64,
 ) -> AppResult<(Vec<Value>, i64)> {
     let today = today(s.clock.now());
-    let end = q.end_date.unwrap_or(today);
-    let start = q.start_date.unwrap_or(end - Duration::days(6));
-    if start > end
-        || end > today
-        || (end - start).num_days() >= 30
-        || start < today - Duration::days(59)
-    {
-        return Err(AppError::bad());
-    }
+    let (start, end) = visits_window(today, q.start_date, q.end_date)?;
     if let Some(v) = &q.q {
         validation::text("q", v, 0, 100)?;
     }
@@ -203,4 +227,44 @@ pub async fn visits_service(
         offset,
     )
     .await
+}
+
+// The queryable period is always the latest 30 Beijing calendar days, including today.
+fn visits_window(
+    today: NaiveDate,
+    start: Option<NaiveDate>,
+    end: Option<NaiveDate>,
+) -> AppResult<(NaiveDate, NaiveDate)> {
+    let minimum = today - Duration::days(29);
+    let end = end.unwrap_or(today);
+    let start = start.unwrap_or((end - Duration::days(6)).max(minimum));
+    if start < minimum || start > end || end > today {
+        return Err(AppError::bad());
+    }
+    Ok((start, end))
+}
+
+#[cfg(test)]
+mod visits_window_tests {
+    use super::*;
+    #[test]
+    fn only_latest_thirty_days_are_queryable() {
+        let today = NaiveDate::from_ymd_opt(2026, 11, 2).unwrap();
+        let oldest = today - Duration::days(29);
+        assert_eq!(
+            visits_window(today, Some(oldest), Some(today)).unwrap(),
+            (oldest, today)
+        );
+        assert!(visits_window(today, Some(oldest - Duration::days(1)), Some(oldest)).is_err());
+        assert!(visits_window(today, Some(today), Some(today + Duration::days(1))).is_err());
+        assert!(visits_window(today, Some(today), Some(oldest)).is_err());
+        assert_eq!(
+            visits_window(today, None, None).unwrap(),
+            (today - Duration::days(6), today)
+        );
+        assert_eq!(
+            visits_window(today, None, Some(oldest)).unwrap(),
+            (oldest, oldest)
+        );
+    }
 }

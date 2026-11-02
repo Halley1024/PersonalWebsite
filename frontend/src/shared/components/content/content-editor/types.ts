@@ -1,7 +1,7 @@
 import type { AdminDetail, CreateContent } from "../../../api/generated";
 import type { Kind } from "../../../api/content";
 import { beijingDay } from "../../../utils/date";
-export type ContentDraft = CreateContent & { version?: number };
+export type ContentDraft = CreateContent & { category_ids: string[]; version?: number };
 export function emptyContent(kind: Kind): ContentDraft {
   return {
     kind,
@@ -10,7 +10,9 @@ export function emptyContent(kind: Kind): ContentDraft {
     excerpt: "",
     body_markdown: "",
     cover_media_id: null,
+    cover_alt: "",
     category_id: null,
+    category_ids: [],
     tag_ids: [],
     featured: false,
     sort_order: 0,
@@ -42,7 +44,9 @@ export function toDraft(item: AdminDetail): ContentDraft {
     excerpt: item.excerpt,
     body_markdown: item.body_markdown,
     cover_media_id: item.cover_media_id,
+    cover_alt: item.cover_alt ?? item.cover?.alt ?? "",
     category_id: item.category_id,
+    category_ids: item.category_ids ?? (item.category_id ? [item.category_id] : []),
     tag_ids: item.tag_ids,
     featured: item.featured,
     sort_order: item.sort_order,

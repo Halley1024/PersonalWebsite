@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { MapPin, ArrowUpRight } from "lucide-react";
+import { MapPin } from "lucide-react";
 import type { PublicProfile } from "../../../../shared/api/generated";
-import { Button } from "../../../../shared/components/ui/button/Button";
-import { ContactDialog } from "../../../../shared/components/profile/contact-dialog/ContactDialog";
 import { MarkdownRenderer } from "../../../../shared/components/content/markdown-renderer/MarkdownRenderer";
 import styles from "./ProfileOverview.module.css";
-export function ProfileOverview({ profile }: { profile: PublicProfile }) {
-  const [contact, setContact] = useState(false);
+export function ProfileOverview({ profile, compact = false }: { profile: PublicProfile; compact?: boolean }) {
   return (
-    <section className={styles.profile}>
+    <section className={`${styles.profile} ${compact ? styles.compact : ""}`}>
+      <header className={styles.heading}>
+        <p className={styles.label}>01 / About</p>
+        <h1>关于我</h1>
+      </header>
       <div className={styles.identity}>
         {profile.avatar ? (
           <img
@@ -35,14 +35,16 @@ export function ProfileOverview({ profile }: { profile: PublicProfile }) {
       </div>
       {profile.intro && <p className={styles.intro}>{profile.intro}</p>}
       {profile.bio_markdown ? (
-        <MarkdownRenderer value={profile.bio_markdown} />
+        <div className={styles.bio}>
+          <MarkdownRenderer value={profile.bio_markdown} />
+        </div>
       ) : (
         <p className={styles.muted}>个人介绍尚未填写。</p>
       )}
       <div className={styles.stats}>
         {[
-          ["experience", "经验与探索"],
-          ["projects", "项目与实践"],
+          ["experience", "年开发经验"],
+          ["projects", "开源 / 落地项目"],
           ["notes", "技术笔记"],
         ].map(
           ([key, label]) =>
@@ -58,7 +60,7 @@ export function ProfileOverview({ profile }: { profile: PublicProfile }) {
       </div>
       {profile.skill_groups.length > 0 && (
         <div className={styles.skills}>
-          <p className={styles.label}>CORE STACK / 技能方向</p>
+          <p className={styles.label}>Core Stack</p>
           {profile.skill_groups.map((group, i) => (
             <section key={i}>
               <h3>
@@ -74,15 +76,6 @@ export function ProfileOverview({ profile }: { profile: PublicProfile }) {
           ))}
         </div>
       )}
-      <Button variant="ghost" onClick={() => setContact(true)}>
-        保持联系
-        <ArrowUpRight size={14} />
-      </Button>
-      <ContactDialog
-        open={contact}
-        onClose={() => setContact(false)}
-        profile={profile}
-      />
     </section>
   );
 }

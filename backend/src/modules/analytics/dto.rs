@@ -11,8 +11,8 @@ pub struct PageviewInput {
 #[derive(Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AnalyticsQuery {
-    pub days: Option<i64>, // 统计窗口，只允许 7 或 30 天。
-} // 只支持 7/30 天。
+    pub days: Option<i64>, // 统计窗口：7/30 天；365 表示含本月的最近 12 个自然月。
+} // 支持 7/30 天与年度月度统计。
 #[derive(Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VisitsQuery {

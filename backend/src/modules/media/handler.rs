@@ -36,9 +36,22 @@ pub async fn list_media_handler(
     State(s): State<AppState>,
     Query(q): Query<MediaListQuery>,
 ) -> AppResult<Response> {
+    if let Some(kind) = &q.kind {
+        crate::common::validation::kind(kind)?;
+    }
+    if let Some(text) = &q.q {
+        crate::common::validation::text("q", text, 0, 100)?;
+    }
     let (p, size, offset) = pagination::bounds(q.page, q.page_size, 20, 50)?;
-    let (rows, total) =
-        repository::list_media_repository(&s.db, offset, size, q.unused.unwrap_or(false)).await?;
+    let (rows, total) = repository::list_media_repository(
+        &s.db,
+        offset,
+        size,
+        q.unused.unwrap_or(false),
+        q.kind.as_deref(),
+        q.q.as_deref(),
+    )
+    .await?;
     Ok(response::page(rows, p, size, total))
 }
 pub async fn upload_handler(
@@ -107,4 +120,10 @@ pub async fn delete_handler(
 ) -> AppResult<StatusCode> {
     service::delete_media_service(&s, id, Some(a.admin_id)).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn stats_handler(State(s): State<AppState>) -> AppResult<Response> {
+    Ok(response::one(
+        repository::media_stats_repository(&s.db).await?,
+    ))
 }

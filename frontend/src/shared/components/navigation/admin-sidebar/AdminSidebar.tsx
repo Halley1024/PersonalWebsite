@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ArrowUpRight, LogOut, X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import type { AdminNavigationItem } from "../types";
 import { useSession } from "../../../session/useSession";
 import styles from "./AdminSidebar.module.css";
@@ -73,10 +73,6 @@ export function AdminSidebar({
           })}
         </nav>
         <div className={styles.bottom}>
-          <Link to="/">
-            查看公开网站
-            <ArrowUpRight size={15} />
-          </Link>
           <div className={styles.identity}>
             <span className={styles.avatar}>
               {session?.authenticated

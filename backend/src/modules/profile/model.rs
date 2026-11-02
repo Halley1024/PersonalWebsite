@@ -9,7 +9,7 @@ pub struct Profile {
     pub display_name: String,                // 展示名称。
     pub headline: String,                    // 简短身份或方向描述。
     pub intro: String,                       // 首页介绍。
-    pub stats: Json<ProfileStats>,           // 站主填写的展示文案，不是自动计算的统计数据。
+    pub stats: Json<ProfileStats>,           // 经验手动维护；作品和笔记按已发布内容实时统计。
     pub bio_markdown: String,                // Markdown 格式的个人介绍正文。
     pub avatar_media_id: Option<Uuid>,       // 头像媒体 ID；没有头像时为 None。
     pub location_label: Option<String>,      // 地区展示文字。
@@ -24,8 +24,8 @@ pub struct Profile {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ProfileStats {
     pub experience: String, // 经验展示文案，不自动计算。
-    pub projects: String,   // 项目数量。
-    pub notes: String,      // 笔记数量。
+    pub projects: String,   // 已发布项目数，查询时计算。
+    pub notes: String,      // 已发布技术博客数，查询时计算。
 }
 
 #[derive(Debug, Serialize, Deserialize)]

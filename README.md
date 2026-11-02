@@ -4,6 +4,14 @@
 
 目前已实现前后端功能接入，支持本地运行。**Docker 部署尚未完成，仓库暂未提供 Dockerfile、Compose 和 Caddy 配置，也没有经过生产部署验收。**
 
+前端展示页面：
+
+![前端展示页面](./docs/images/public_site.png)
+
+后台管理页面：
+
+![后台管理页面](./docs/images/admin_site.png)
+
 ## 项目功能
 
 ### 公开站

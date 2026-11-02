@@ -11,7 +11,7 @@
   margin-bottom: 28px;
 }
 .heading p {
-  font: 10px var(--mono);
+  font: 13px/1.6 var(--mono);
   color: var(--accent);
   letter-spacing: 0.16em;
   margin-bottom: 14px;
@@ -22,14 +22,14 @@
 }
 .heading span {
   color: var(--dim);
-  font-size: 12px;
+  font-size: 14px;
 }
 .heading > a {
   display: flex;
   align-items: center;
   gap: 6px;
   color: var(--dim);
-  font-size: 11px;
+  font-size: 14px;
   white-space: nowrap;
 }
 .heading > a:hover {
@@ -38,7 +38,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  gap: 20px;
 }
 @media (max-width: 950px) {
   .grid {

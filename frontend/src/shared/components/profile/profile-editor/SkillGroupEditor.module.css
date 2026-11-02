@@ -1,0 +1,23 @@
+.group { min-width: 0; display: grid; gap: 20px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-soft); }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.header > span { font: 13px var(--mono); color: var(--dim); }
+.removeGroup, .removeItem { display: grid; place-items: center; color: var(--faint); border-radius: 7px; background: transparent; }
+.removeGroup { width: 36px; height: 36px; }
+.removeGroup:hover, .removeItem:hover { color: var(--danger); background: var(--surface-hover); }
+.label { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--dim); margin-bottom: 10px; }
+.label small { font: 12px var(--mono); color: var(--faint); }
+.items { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.item { display: flex; align-items: center; min-width: 0; flex: 1 1 145px; max-width: 100%; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); }
+.item:focus-within { border-color: var(--accent); }
+.group .item input { width: 100%; min-width: 0; border: 0; border-radius: 8px; background: transparent; padding: 10px 8px 10px 12px; outline: none; font: 14px/1.5 var(--mono); }
+.removeItem { width: 34px; height: 40px; flex-shrink: 0; margin-right: 3px; }
+.add { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border: 1px dashed var(--border-strong); border-radius: 8px; background: transparent; color: var(--accent); }
+.add:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); }
+.add:disabled { opacity: .35; cursor: not-allowed; }
+.hint { font-size: 12px; color: var(--faint); line-height: 1.7; margin-top: 12px; }
+.group button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.skill { flex: 1; min-width: 0; width: 100%; min-height: 42px; padding: 10px 12px; text-align: left; font: 14px/1.5 var(--mono); color: var(--text); overflow-wrap: anywhere; cursor: grab; border-radius: inherit; }
+.item[draggable="true"] { cursor: grab; }
+.item[data-dragging] { opacity: .4; }
+.item[data-drop] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }

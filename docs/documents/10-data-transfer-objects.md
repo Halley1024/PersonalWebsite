@@ -56,7 +56,7 @@ interface Life { occurred_on: LocalDate; location_label: string | null }
 ```ts
 interface ContentFields {
   title: string; excerpt: string; body_markdown: string;
-  cover_media_id: UUID | null; category_id: UUID | null; tag_ids: UUID[];
+  cover_media_id: UUID | null; category_ids: UUID[]; tag_ids: UUID[]; // 分类和标签均可多选
   featured: boolean; sort_order: number;
   seo_title: string | null; seo_description: string | null;
   gallery: GalleryInput[];
@@ -154,7 +154,7 @@ type SettingsUpdate = SettingsFields & { version: number };
 type AdminSettings = SettingsUpdate & { updated_at: Instant };
 ```
 
-公开 settings 返回 SettingsFields。经历按数组顺序展示；UI “持续至今”由 end_date=null 推导，不另存可能矛盾的 ongoing。stats 是展示字符串（例如“4+”），不是访问统计或自动计算的项目总数，禁止把原型数字当实绩。
+公开 settings 返回 SettingsFields。经历按数组顺序展示；UI “持续至今”由 end_date=null 推导，不另存可能矛盾的 ongoing。stats 保持字符串格式：experience 为手动维护的经验文案（例如“4+”）；projects 和 notes 分别由后端实时统计已发布项目与已发布技术博客，草稿、归档和生活记录不计入。保存资料只写入经验，客户端提交的作品、笔记数字不作为统计来源。
 
 个人介绍页和经历页共用 ProfileUpdate；经历新建/删除/排序都修改同一集合并提交最新整体版本。客户端新建经历可生成 UUID，服务器校验重复 ID。撤销删除属于再次提交原位置条目，也必须通过 version 校验。
 
@@ -180,3 +180,13 @@ interface Dashboard {
 ```
 
 登录 POST `{username,password}`，密码修改 PUT `{current_password,new_password}`。上传用 FormData 的 file/alt 字段，不发送 Base64 JSON。分类创建 `{kind,name,slug,sort_order}`，更新去掉 kind 加 version；标签相同但没有 sort_order；删除 version 放查询参数。统计、Visit、AccessRule 对象统一见 [11](11-analytics-and-access-control.md)，不在两处重复定义。
+
+封面描述：CreateContent / UpdateContent 接受可选 cover_alt（最长 200 字），省略时兼容为空。AdminDetail 返回原始 cover_alt；cover.alt 为最终展示文本，内容级描述非空时优先，否则沿用媒体描述。该字段随文章保存，不修改共用媒体资料。部署前执行 0007 数据库迁移。
+
+分类多选使用 `category_ids`，空数组表示取消全部分类；同类型分类不能重复。管理详情返回 `category_ids`，卡片与公开详情返回 `categories` 摘要数组。兼容旧请求的 `category_id`；同时提供时以 `category_ids` 为准。响应中的 `category` / `category_id` 保留为首个分类，分类筛选匹配任一已选分类。
+
+管理端分类、标签条目的只读 `content_count` 为关联内容数，包含已发布、草稿和归档内容，按内容去重。列表和创建/更新响应均返回该值。点击条目后使用管理内容列表的 `kind` 与 `category` / `tag`（slug）筛选关联内容；数量不受当前内容列表的分页、搜索或状态筛选影响。
+
+管理端 `PUT /admin/contents/{id}/taxonomy` 接受 `{version, category_ids, tag_ids}`，仅更新目录绑定及内容版本，可用于草稿、已发布和归档内容。关联列表的“修改”调整当前目录类型的绑定，“清除”只移除当前分类或标签；接口校验版本、去重、同类型关联和最多 10 个标签，并记录审计。
+
+媒体库管理列表支持 `kind=blog|project|life`、`unused=true` 和 `q` 描述字面搜索（最多 100 字），可组合分页。`GET /admin/media/stats` 返回 `{all, blog, project, life, unused}`，统计不受搜索和分页影响；每张图片在同一内容类型内去重，可同时归属于多个类型。未引用统计检查封面、正文、相册及头像，仅列出 ready 媒体。

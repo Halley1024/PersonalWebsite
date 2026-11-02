@@ -48,3 +48,61 @@
   padding: 16px 24px;
   border-top: 1px solid var(--border);
 }
+
+.contact {
+  width: min(480px, calc(100vw - 40px));
+  margin: auto;
+  padding: 30px;
+  overflow-y: auto;
+  border-radius: 20px;
+  background: var(--bg-soft);
+}
+.contact::backdrop { backdrop-filter: blur(8px); }
+.contact .heading {
+  display: block;
+  padding: 0;
+  border: 0;
+}
+.contact .heading h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.contact .heading button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: transparent;
+}
+.contact .heading button:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+.eyebrow {
+  margin: 0 42px 14px 0;
+  color: var(--accent);
+  font: 11px/1.6 var(--mono);
+  letter-spacing: 0.16em;
+}
+.description {
+  margin: 12px 0 24px;
+  color: var(--dim);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.contact .body {
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+}
+@media (max-width: 640px) {
+  .contact { padding: 24px 20px; }
+  .contact .heading button { top: 16px; right: 16px; }
+}

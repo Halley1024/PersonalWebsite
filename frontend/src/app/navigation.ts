@@ -18,8 +18,8 @@ import type {
 export const publicNav: NavigationItem[] = [
   { to: "/", label: "首页" },
   { to: "/about", label: "关于" },
-  { to: "/posts", label: "博客" },
   { to: "/projects", label: "作品" },
+  { to: "/posts", label: "博客" },
   { to: "/life", label: "生活" },
 ];
 export const adminNav: AdminNavigationItem[] = [

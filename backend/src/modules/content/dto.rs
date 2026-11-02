@@ -27,22 +27,25 @@ pub struct GalleryInput {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ContentInput {
-    pub kind: Option<String>,            // 仅创建时提供。
-    pub slug: Option<String>,            // 仅创建时提供且以后不可变。
-    pub version: Option<i32>,            // 更新时必须提供。
-    pub title: String,                   // 标题。
-    pub excerpt: String,                 // 纯文本摘要。
-    pub body_markdown: String,           // 正文原文。
-    pub cover_media_id: Option<Uuid>,    // 封面引用。
-    pub category_id: Option<Uuid>,       // 同类型分类。
-    pub tag_ids: Vec<Uuid>,              // 同类型标签。
-    pub featured: bool,                  // 精选标记，不改变发布状态。
-    pub sort_order: i32,                 // 小值优先。
-    pub seo_title: Option<String>,       // SEO 标题。
+    pub kind: Option<String>,         // 仅创建时提供。
+    pub slug: Option<String>,         // 仅创建时提供且以后不可变。
+    pub version: Option<i32>,         // 更新时必须提供。
+    pub title: String,                // 标题。
+    pub excerpt: String,              // 纯文本摘要。
+    pub body_markdown: String,        // 正文原文。
+    pub cover_media_id: Option<Uuid>, // 封面引用。
+    #[serde(default)]
+    pub cover_alt: String, // 内容级封面描述，留空沿用媒体描述。
+    pub category_id: Option<Uuid>,    // 兼容旧接口，等于首个分类。
+    pub category_ids: Vec<Uuid>,      // 同类型分类，可多选。
+    pub tag_ids: Vec<Uuid>,           // 同类型标签。
+    pub featured: bool,               // 精选标记，不改变发布状态。
+    pub sort_order: i32,              // 小值优先。
+    pub seo_title: Option<String>,    // SEO 标题。
     pub seo_description: Option<String>, // SEO 描述。
-    pub gallery: Vec<GalleryInput>,      // 有序相册。
-    pub project: Option<ProjectInput>,   // 仅作品使用。
-    pub life: Option<LifeInput>,         // 仅生活使用。
+    pub gallery: Vec<GalleryInput>,   // 有序相册。
+    pub project: Option<ProjectInput>, // 仅作品使用。
+    pub life: Option<LifeInput>,      // 仅生活使用。
 }
 #[derive(Default, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -72,3 +75,11 @@ pub struct StatusInput {
     pub status: String, // 业务状态。
     pub version: i32,   // 预期版本或当前乐观锁版本。
 } // 显式状态转换。
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TaxonomyInput {
+    pub version: i32,
+    pub category_ids: Vec<Uuid>,
+    pub tag_ids: Vec<Uuid>,
+}

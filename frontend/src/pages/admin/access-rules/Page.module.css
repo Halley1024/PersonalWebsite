@@ -1,3 +1,22 @@
-.page {
-  min-width: 0;
-}
+.page { min-width: 0; }
+.toolbar { gap: 16px; margin-bottom: 24px; }
+.toolbar input, .toolbar select { font-size: 14px; min-height: 44px; }
+.rulesTable { min-width: 940px; table-layout: fixed; font-size: 14px; }
+.rulesTable th { font-size: 13px; padding: 16px 20px; }
+.rulesTable td { padding: 20px; line-height: 1.7; overflow-wrap: anywhere; }
+.rulesTable td strong { font-size: 14px; overflow-wrap: anywhere; }
+.rulesTable td small { font-size: 12px; margin-top: 6px; overflow-wrap: anywhere; }
+.rulesTable th:first-child { width: 160px; }
+.rulesTable th:nth-child(3) { width: 170px; }
+.rulesTable th:nth-child(4) { width: 100px; }
+.rulesTable th:last-child { width: 340px; }
+.rulesTable td:nth-child(4) > span { font-size: 12px; padding: 5px 10px; }
+.actions { display: flex; align-items: center; gap: 16px; white-space: nowrap; }
+.actions button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: transparent; color: var(--dim); font-size: 13px; line-height: 1.5; }
+.actions > button:first-child { color: var(--accent); }
+.actions button:hover { background: var(--surface-hover); border-color: var(--dim); }
+.actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.destructive { display: inline-flex; margin-left: 4px; padding-left: 20px; border-left: 1px solid var(--border-strong); }
+.actions .deleteButton { color: var(--danger); }
+.actions .deleteButton:hover { border-color: var(--danger); }
+@media (max-width: 650px) { .toolbar { gap: 12px; } }

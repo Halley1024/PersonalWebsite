@@ -49,6 +49,10 @@ export function useContentMutations() {
         contentApi.status(id, body),
       onSuccess,
     }),
+    taxonomy: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: Parameters<typeof contentApi.taxonomy>[1] }) => contentApi.taxonomy(id, body),
+      onSuccess,
+    }),
     remove: useMutation({
       mutationFn: ({ id, version }: { id: string; version: number }) =>
         contentApi.remove(id, version),

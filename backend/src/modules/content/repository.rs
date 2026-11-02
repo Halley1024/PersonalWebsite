@@ -13,9 +13,12 @@ fn media(alias: &str) -> String {
     )
 }
 fn fields(detail: bool) -> String {
-    let cover = media("m");
+    let media_cover = media("m");
+    let cover = format!(
+        "CASE WHEN m.id IS NOT NULL AND m.state='ready' AND c.cover_alt<>'' THEN ({media_cover}) || jsonb_build_object('alt',c.cover_alt) ELSE {media_cover} END"
+    );
     let body = if detail {
-        "'body_markdown',c.body_markdown,'seo_title',c.seo_title,'seo_description',c.seo_description,'cover_media_id',c.cover_media_id,'category_id',c.category_id,"
+        "'body_markdown',c.body_markdown,'seo_title',c.seo_title,'seo_description',c.seo_description,'cover_media_id',c.cover_media_id,'cover_alt',c.cover_alt,'category_id',c.category_id,"
     } else {
         ""
     };
@@ -23,6 +26,7 @@ fn fields(detail: bool) -> String {
         r#"jsonb_build_object('id',c.id,'kind',c.kind,'slug',c.slug,'title',c.title,'excerpt',c.excerpt,{body}
     'featured',c.featured,'sort_order',c.sort_order,'status',c.status,'version',c.version,'created_at',c.created_at,'updated_at',c.updated_at,'published_at',c.published_at,
     'cover',{cover},'category',CASE WHEN cat.id IS NULL THEN NULL ELSE jsonb_build_object('id',cat.id,'name',cat.name,'slug',cat.slug) END,
+    'categories',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',cat.id,'name',cat.name,'slug',cat.slug) ORDER BY cc.position) FROM content_categories cc JOIN categories cat ON cat.id=cc.category_id WHERE cc.content_id=c.id),'[]'::jsonb),
     'tags',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',t.id,'name',t.name,'slug',t.slug) ORDER BY t.name,t.id) FROM content_tags ct JOIN tags t ON t.id=ct.tag_id WHERE ct.content_id=c.id),'[]'::jsonb),
     'project',CASE WHEN p.content_id IS NULL THEN NULL ELSE to_jsonb(p)-'content_id'-'kind' END,
     'life',CASE WHEN l.content_id IS NULL THEN NULL ELSE to_jsonb(l)-'content_id'-'kind' END)"#
@@ -58,6 +62,14 @@ pub async fn find_detail_repository(
     let gallery:Vec<GalleryRow>=sqlx::query_as(&format!("SELECT cm.media_id,cm.position,cm.alt,{} AS media FROM content_media cm JOIN media_files gm ON gm.id=cm.media_id WHERE cm.content_id=$1 AND cm.role='gallery' ORDER BY cm.position",media("gm"))).bind(actual_id).fetch_all(&mut *tx).await?;
     let values:Vec<Value>=gallery.into_iter().map(|g|serde_json::json!({"media_id":g.media_id,"position":g.position,"alt":g.alt,"media":g.media})).collect();
     data["gallery"] = serde_json::json!(values);
+    data["category_ids"] = serde_json::json!(
+        data["categories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|category| category["id"].clone())
+            .collect::<Vec<_>>()
+    );
     data["tag_ids"] = serde_json::json!(
         data["tags"]
             .as_array()
@@ -82,10 +94,13 @@ pub async fn list_content_repository(
     size: i64,
     offset: i64,
 ) -> AppResult<(Vec<Value>, i64)> {
-    let filter = "WHERE ($1::text IS NULL OR c.kind=$1) AND ($2::text IS NULL OR c.status=$2) AND ($3::text IS NULL OR c.title ILIKE $3 OR c.excerpt ILIKE $3) AND ($4::text IS NULL OR cat.slug=$4) AND ($5::text IS NULL OR EXISTS(SELECT 1 FROM content_tags ct JOIN tags t ON t.id=ct.tag_id WHERE ct.content_id=c.id AND t.slug=$5)) AND ($6::boolean IS NULL OR c.featured=$6)";
+    let filter = "WHERE ($1::text IS NULL OR c.kind=$1) AND ($2::text IS NULL OR c.status=$2) AND ($3::text IS NULL OR c.title ILIKE $3 OR c.excerpt ILIKE $3) AND ($4::text IS NULL OR EXISTS(SELECT 1 FROM content_categories cc JOIN categories cat ON cat.id=cc.category_id WHERE cc.content_id=c.id AND cat.slug=$4)) AND ($5::text IS NULL OR EXISTS(SELECT 1 FROM content_tags ct JOIN tags t ON t.id=ct.tag_id WHERE ct.content_id=c.id AND t.slug=$5)) AND ($6::boolean IS NULL OR c.featured=$6)";
     let order = match sort {
         "published" => "c.published_at DESC,c.id DESC",
-        "project" => "c.sort_order,c.published_at DESC,c.id DESC",
+        // 在分页前按项目时间排序，同一天使用发布时间和 ID 保持分页稳定。
+        "project" => {
+            "COALESCE(p.started_on,(c.published_at AT TIME ZONE 'Asia/Shanghai')::date) DESC,c.published_at DESC,c.id DESC"
+        }
         "life" => "l.occurred_on DESC,c.published_at DESC,c.id DESC",
         "updated_desc" => "c.updated_at DESC,c.id DESC",
         "created_desc" => "c.created_at DESC,c.id DESC",
@@ -144,19 +159,18 @@ pub async fn media_ids_repository(pool: &PgPool, id: Uuid) -> AppResult<Vec<Uuid
 pub async fn validate_relations_repository(
     tx: &mut Transaction<'_, Postgres>,
     kind: &str,
-    category: Option<Uuid>,
+    categories: &[Uuid],
     tags: &[Uuid],
 ) -> AppResult<()> {
-    if let Some(id) = category {
-        let found: Option<Uuid> =
-            sqlx::query_scalar("SELECT id FROM categories WHERE id=$1 AND kind=$2 FOR KEY SHARE")
-                .bind(id)
-                .bind(kind)
-                .fetch_optional(&mut **tx)
-                .await?;
-        if found.is_none() {
-            return Err(AppError::invalid("category_id", "分类类型不匹配或不存在"));
-        }
+    let rows: Vec<Uuid> = sqlx::query_scalar(
+        "SELECT id FROM categories WHERE id=ANY($1) AND kind=$2 ORDER BY id FOR KEY SHARE",
+    )
+    .bind(categories)
+    .bind(kind)
+    .fetch_all(&mut **tx)
+    .await?;
+    if rows.len() != categories.len() {
+        return Err(AppError::invalid("category_ids", "分类类型不匹配或不存在"));
     }
     let rows: Vec<Uuid> = sqlx::query_scalar(
         "SELECT id FROM tags WHERE id=ANY($1) AND kind=$2 ORDER BY id FOR KEY SHARE",
@@ -180,16 +194,16 @@ pub async fn save_content_repository(
 ) -> AppResult<()> {
     if create {
         sqlx::query(r#"
-            INSERT INTO content_items(id,kind,slug,title,excerpt,body_markdown,cover_media_id,category_id,featured,sort_order,seo_title,seo_description) 
-            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-            "#).bind(id).bind(kind).bind(&i.slug).bind(&i.title).bind(&i.excerpt).bind(&i.body_markdown).bind(i.cover_media_id).bind(i.category_id).bind(i.featured).bind(i.sort_order).bind(&i.seo_title).bind(&i.seo_description).execute(&mut **tx).await?;
+            INSERT INTO content_items(id,kind,slug,title,excerpt,body_markdown,cover_media_id,category_id,featured,sort_order,seo_title,seo_description,cover_alt)
+            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+            "#).bind(id).bind(kind).bind(&i.slug).bind(&i.title).bind(&i.excerpt).bind(&i.body_markdown).bind(i.cover_media_id).bind(i.category_id).bind(i.featured).bind(i.sort_order).bind(&i.seo_title).bind(&i.seo_description).bind(&i.cover_alt).execute(&mut **tx).await?;
     } else {
         let affected=sqlx::query(r#"
             UPDATE content_items 
-            SET title=$1,excerpt=$2,body_markdown=$3,cover_media_id=$4,category_id=$5,featured=$6,sort_order=$7,seo_title=$8,seo_description=$9,version=version+1,updated_at=now() 
+            SET title=$1,excerpt=$2,body_markdown=$3,cover_media_id=$4,category_id=$5,featured=$6,sort_order=$7,seo_title=$8,seo_description=$9,cover_alt=$12,version=version+1,updated_at=now()
             WHERE id=$10 
             AND version=$11
-            "#).bind(&i.title).bind(&i.excerpt).bind(&i.body_markdown).bind(i.cover_media_id).bind(i.category_id).bind(i.featured).bind(i.sort_order).bind(&i.seo_title).bind(&i.seo_description).bind(id).bind(i.version).execute(&mut **tx).await?.rows_affected();
+            "#).bind(&i.title).bind(&i.excerpt).bind(&i.body_markdown).bind(i.cover_media_id).bind(i.category_id).bind(i.featured).bind(i.sort_order).bind(&i.seo_title).bind(&i.seo_description).bind(id).bind(i.version).bind(&i.cover_alt).execute(&mut **tx).await?.rows_affected();
         if affected != 1 {
             return Err(AppError::conflict());
         }
@@ -219,18 +233,7 @@ pub async fn save_content_repository(
         .execute(&mut **tx)
         .await?;
     }
-    sqlx::query("DELETE FROM content_tags WHERE content_id=$1")
-        .bind(id)
-        .execute(&mut **tx)
-        .await?;
-    for tag in &i.tag_ids {
-        sqlx::query("INSERT INTO content_tags(content_id,tag_id,kind) VALUES($1,$2,$3)")
-            .bind(id)
-            .bind(tag)
-            .bind(kind)
-            .execute(&mut **tx)
-            .await?;
-    }
+    save_relations_repository(tx, id, kind, &i.category_ids, &i.tag_ids).await?;
     sqlx::query("DELETE FROM content_media WHERE content_id=$1")
         .bind(id)
         .execute(&mut **tx)
@@ -291,4 +294,34 @@ pub async fn sitemap_repository(pool: &PgPool) -> AppResult<Vec<(String, String)
     )
     .fetch_all(pool)
     .await?)
+}
+
+pub async fn save_relations_repository(
+    tx: &mut Transaction<'_, Postgres>,
+    id: Uuid,
+    kind: &str,
+    categories: &[Uuid],
+    tags: &[Uuid],
+) -> AppResult<()> {
+    sqlx::query("DELETE FROM content_categories WHERE content_id=$1")
+        .bind(id)
+        .execute(&mut **tx)
+        .await?;
+    for (position, category) in categories.iter().enumerate() {
+        sqlx::query("INSERT INTO content_categories(content_id,category_id,kind,position) VALUES($1,$2,$3,$4)")
+            .bind(id).bind(category).bind(kind).bind(position as i32).execute(&mut **tx).await?;
+    }
+    sqlx::query("DELETE FROM content_tags WHERE content_id=$1")
+        .bind(id)
+        .execute(&mut **tx)
+        .await?;
+    for tag in tags {
+        sqlx::query("INSERT INTO content_tags(content_id,tag_id,kind) VALUES($1,$2,$3)")
+            .bind(id)
+            .bind(tag)
+            .bind(kind)
+            .execute(&mut **tx)
+            .await?;
+    }
+    Ok(())
 }

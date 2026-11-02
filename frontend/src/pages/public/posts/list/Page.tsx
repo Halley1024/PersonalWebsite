@@ -4,8 +4,8 @@ import { useUrlFilters } from "../../../../shared/hooks/useUrlFilters";
 import { usePageview } from "../../../../shared/hooks/usePageview";
 import { useSeo } from "../../../../shared/hooks/useSeo";
 import { QueryState } from "../../../../shared/components/ui/query-state/QueryState";
-import { Pagination } from "../../../../shared/components/ui/pagination/Pagination";
-import { BlogCard } from "./components/blog-card/BlogCard";
+import { BlogPagination } from "./components/BlogPagination";
+import { BlogCard } from "../../../../shared/components/content/blog-card/BlogCard";
 import { BlogTools } from "./components/blog-tools/BlogTools";
 import styles from "./Page.module.css";
 
@@ -24,13 +24,15 @@ export default function Page() {
   const tags = usePublicTaxonomy("tags", "blog");
   const description =
     "记录踩坑、复现与思考，主要集中在模型工程化与机器人中间件两个方向。";
-  useSeo("技术笔记", description);
+  useSeo("总结经验，分享心得", description);
   usePageview(query.isSuccess);
   return (
     <div className={styles.page}>
       <header className={styles.heading}>
         <p className={styles.label}>02 / Blog</p>
-        <h1>技术笔记</h1>
+        <h1>
+          总结经验，分享心得<span className={styles.titleAccent}>.</span>
+        </h1>
         <p className={styles.description}>{description}</p>
       </header>
       <BlogTools
@@ -51,21 +53,23 @@ export default function Page() {
             : ""}
         </p>
       )}
-      <QueryState
-        loading={query.isPending}
-        error={query.error}
-        retry={() => void query.refetch()}
-        empty={query.data?.data.length === 0}
-        emptyText="没有找到匹配的笔记，试试其他关键词或清除筛选。"
-      >
-        <div className={styles.grid}>
-          {query.data?.data.map((item, index) => (
-            <BlogCard key={item.id} item={item} index={index} />
-          ))}
-        </div>
-      </QueryState>
+      <div className={query.data?.data.length === 0 ? styles.empty : undefined}>
+        <QueryState
+          loading={query.isPending}
+          error={query.error}
+          retry={() => void query.refetch()}
+          empty={query.data?.data.length === 0}
+          emptyText="没有找到匹配的笔记，试试其他关键词或清除筛选。"
+        >
+          <div className={styles.grid}>
+            {query.data?.data.map((item, index) => (
+              <BlogCard key={item.id} item={item} index={index} />
+            ))}
+          </div>
+        </QueryState>
+      </div>
       {query.data && (
-        <Pagination
+        <BlogPagination
           page={page}
           total={query.data.meta.total}
           totalPages={query.data.meta.total_pages}

@@ -11,7 +11,7 @@ pub struct PublicProfileDto {
     pub display_name: String,             // 展示名称。
     pub headline: String,                 // 简短身份或方向描述。
     pub intro: String,                    // 首页介绍。
-    pub stats: ProfileStatsDto,           // 站主填写的展示文案，不是自动统计数据。
+    pub stats: ProfileStatsDto,           // 经验手动维护；作品和笔记按已发布内容实时统计。
     pub bio_markdown: String,             // Markdown 格式的个人介绍正文。
     pub avatar: Option<AvatarDto>,        // 头像摘要；没有头像时返回 null。
     pub location_label: Option<String>,   // 地区展示文字。
@@ -25,8 +25,8 @@ pub struct PublicProfileDto {
 #[derive(Debug, Serialize)]
 pub struct ProfileStatsDto {
     pub experience: String, // 经验展示文案，可为空字符串。
-    pub projects: String,   // 项目展示文案。
-    pub notes: String,      // 笔记展示文案。
+    pub projects: String,   // 已发布项目数量字符串。
+    pub notes: String,      // 已发布技术博客数量字符串。
 }
 impl From<ProfileStats> for ProfileStatsDto {
     fn from(value: ProfileStats) -> Self {

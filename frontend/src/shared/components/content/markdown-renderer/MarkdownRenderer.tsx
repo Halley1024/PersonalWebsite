@@ -1,44 +1,17 @@
-import { Children, isValidElement, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { headingSlug, transformMarkdownUrl } from "./markdown";
+import { rehypeHeadingIds, transformMarkdownUrl } from "./markdown";
 import styles from "./MarkdownRenderer.module.css";
-function text(nodes: ReactNode): string {
-  return Children.toArray(nodes)
-    .map((n) =>
-      typeof n === "string" || typeof n === "number"
-        ? String(n)
-        : isValidElement<{ children?: ReactNode }>(n)
-          ? text(n.props.children)
-          : "",
-    )
-    .join("");
-}
 export function MarkdownRenderer({ value }: { value: string }) {
-  const counts = new Map<string, number>();
-  const heading = (level: 1 | 2 | 3 | 4 | 5 | 6, children: ReactNode) => {
-    const slug = headingSlug(text(children));
-    const count = counts.get(slug) || 0;
-    counts.set(slug, count + 1);
-    const id = count ? `${slug}-${count}` : slug;
-    const Tag = `h${level}` as const;
-    return <Tag id={id}>{children}</Tag>;
-  };
   return (
     <div className={styles.markdown}>
       <ReactMarkdown
         skipHtml
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
+        rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }], rehypeHeadingIds]}
         urlTransform={transformMarkdownUrl}
         components={{
-          h1: ({ children }) => heading(1, children),
-          h2: ({ children }) => heading(2, children),
-          h3: ({ children }) => heading(3, children),
-          h4: ({ children }) => heading(4, children),
-          h5: ({ children }) => heading(5, children),
-          h6: ({ children }) => heading(6, children),
           a: ({ href, children }) =>
             href ? (
               <a

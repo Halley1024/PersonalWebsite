@@ -34,21 +34,28 @@ S['PasswordInput']=obj({'current_password':string(128,minLength=1),'new_password
 S['Project']=obj({'tech_stack':array(string(50,minLength=1),20),'project_stage':string(enum=['idea','building','maintained','completed']),'started_on':date,'ended_on':nullable(date),'repository_url':nullable(string(2048,format='uri')),'demo_url':nullable(string(2048,format='uri'))})
 S['Life']=obj({'occurred_on':date,'location_label':nullable(string(100))})
 S['GalleryInput']=obj({'media_id':uuid,'alt':string(200),'position':{**integer,'minimum':0}})
+S['ContentTaxonomyUpdate']=obj({'version':version,'category_ids':{**array(uuid),'uniqueItems':True},'tag_ids':{**array(uuid,10),'uniqueItems':True}})
 S['GalleryItem']=obj({'media':ref('MediaSummary'),'alt':string(200),'position':{**integer,'minimum':0}})
-fields={'title':string(120,minLength=1),'excerpt':string(300,minLength=1),'body_markdown':string(200000),'cover_media_id':nullable(uuid),'category_id':nullable(uuid),'tag_ids':{**array(uuid,10),'uniqueItems':True},'featured':boolean,'sort_order':integer,'seo_title':nullable(string(70,minLength=1)),'seo_description':nullable(string(160,minLength=1)),'gallery':array(ref('GalleryInput'),20),'project':nullable(ref('Project')),'life':nullable(ref('Life'))}
+fields={'title':string(120,minLength=1),'excerpt':string(300,minLength=1),'body_markdown':string(200000),'cover_media_id':nullable(uuid),'cover_alt':string(200),'category_id':nullable(uuid),'category_ids':{**array(uuid),'uniqueItems':True},'tag_ids':{**array(uuid,10),'uniqueItems':True},'featured':boolean,'sort_order':integer,'seo_title':nullable(string(70,minLength=1)),'seo_description':nullable(string(160,minLength=1)),'gallery':array(ref('GalleryInput'),20),'project':nullable(ref('Project')),'life':nullable(ref('Life'))}
 S['CreateContent']=obj({**fields,'kind':string(enum=['blog','project','life']),'slug':string(100,pattern=r'^[a-z0-9]+(-[a-z0-9]+)*$')})
 S['UpdateContent']=obj({**fields,'version':version});S['ChangeStatus']=obj({'status':string(enum=['draft','published','archived']),'version':version})
-base={'id':uuid,'kind':string(enum=['blog','project','life']),'slug':string(100),'title':string(120),'excerpt':string(300),'cover':nullable(ref('MediaSummary')),'category':nullable(ref('TaxonomySummary')),'tags':array(ref('TaxonomySummary')),'featured':boolean,'published_at':instant,'updated_at':instant}
+base={'id':uuid,'kind':string(enum=['blog','project','life']),'slug':string(100),'title':string(120),'excerpt':string(300),'cover':nullable(ref('MediaSummary')),'category':nullable(ref('TaxonomySummary')),'categories':array(ref('TaxonomySummary')),'tags':array(ref('TaxonomySummary')),'featured':boolean,'published_at':instant,'updated_at':instant}
 # 卡片按 kind 有不同附加字段；实际字段差异在开发文档 10 中说明。
 S['PublicCard']=obj({**base,'tech_stack':array(string()),'project_stage':string(),'started_on':date,'ended_on':nullable(date),'occurred_on':date,'location_label':nullable(string(100))},required=list(base))
 S['PublicDetail']=obj({**S['PublicCard']['properties'],'body_markdown':string(200000),'seo_title':nullable(string(70)),'seo_description':nullable(string(160)),'gallery':array(ref('GalleryItem')),'project':nullable(ref('Project')),'life':nullable(ref('Life'))},required=[*base,'body_markdown','seo_title','seo_description','gallery','project','life'])
 S['AdminCard']=obj({**base,'published_at':nullable(instant),'status':string(enum=['draft','published','archived']),'version':version,'created_at':instant,'sort_order':integer,'project':nullable(ref('Project')),'life':nullable(ref('Life'))})
 S['AdminDetail']=obj({**S['AdminCard']['properties'],**fields,'tag_ids':array(uuid,10),'gallery':array({**S['GalleryInput'],'properties':{**S['GalleryInput']['properties'],'media':nullable(ref('MediaSummary'))}})})
+for name in ['CreateContent','UpdateContent']:
+    S[name]['required'] = [key for key in S[name]['required'] if key not in ['category_id','category_ids','cover_alt']]
+    S[name]['anyOf'] = [{'required':['category_ids']},{'required':['category_id']}]
+for name in ['PublicCard','PublicDetail','AdminCard','AdminDetail']:
+    S[name]['required'] = [key for key in S[name]['required'] if key not in ['categories','category_ids','cover_alt']]
 for tag in ['Category','Tag']:
     attrs={'kind':string(enum=['blog','project','life']),'name':string(50,minLength=1),'slug':string(100,pattern=r'^[a-z0-9]+(-[a-z0-9]+)*$')}
     if tag=='Category':attrs['sort_order']=integer
-    S[tag+'Create']=obj(attrs);S[tag+'Update']=obj({k:v for k,v in attrs.items() if k!='kind'}|{'version':version});S[tag]=obj(attrs|{'id':uuid,'version':version,'created_at':instant,'updated_at':instant})
+    S[tag+'Create']=obj(attrs);S[tag+'Update']=obj({k:v for k,v in attrs.items() if k!='kind'}|{'version':version});S[tag]=obj(attrs|{'id':uuid,'version':version,'created_at':instant,'updated_at':instant,'content_count':{'type':'integer','minimum':0,'readOnly':True,'description':'关联内容数，包含草稿、已发布和归档内容'}})
 S['Media']=obj({**S['MediaSummary']['properties'],'thumbnail_url':string(),'mime_type':string(enum=['image/jpeg','image/png','image/webp']),'byte_size':{'type':'integer','format':'int64'},'created_at':instant,'reference_count':{'type':'integer','minimum':0}})
+S['MediaStats']=obj({key:{'type':'integer','minimum':0} for key in ['all','blog','project','life','unused']})
 S['Pageview']=obj({'event_id':uuid,'page_path':string(300,minLength=1),'referrer_origin':nullable(string(255,format='uri'))})
 S['Region']=obj({'id':string(),'label':string(),'blockable':boolean})
 rule={'scope':string(enum=['ip','region']),'ip':nullable(string()),'region_id':nullable(string()),'reason':string(200,minLength=1),'enabled':boolean,'duration_hours':{'type':['integer','null'],'enum':[1,24,168,None]}}
@@ -89,11 +96,13 @@ for route in ['posts','projects','life']:
     operation('/api/v1/'+route+'/{slug}','get','公开已发布内容详情','PublicDetail')
 operation('/api/v1/admin/contents','get','管理内容列表','AdminCard',page=True,params=paging+[param('kind',string(enum=['blog','project','life'])),param('status',string(enum=['draft','published','archived'])),param('q',string(100)),param('category',string(100)),param('tag',string(100)),param('sort',string(enum=['updated_desc','created_desc','sort_asc']))])
 operation('/api/v1/admin/contents','post','创建草稿','AdminDetail','CreateContent');operation('/api/v1/admin/contents/{id}','get','管理内容详情','AdminDetail');operation('/api/v1/admin/contents/{id}','put','完整保存内容','AdminDetail','UpdateContent');operation('/api/v1/admin/contents/{id}','delete','删除草稿或归档内容',params=[param('version',version,required=True)]);operation('/api/v1/admin/contents/{id}/status','post','发布、下线、归档或恢复','AdminDetail','ChangeStatus')
+operation('/api/v1/admin/contents/{id}/taxonomy','put','只修改内容的分类和标签，适用于所有内容状态','AdminDetail','ContentTaxonomyUpdate')
 for route,typ in [('categories','Category'),('tags','Tag')]:
     op=operation('/api/v1/'+route,'get','公开已发布引用的分类或标签',params=[param('kind',string(enum=['blog','project','life']),required=True)]);op['responses']['200']['content']={'application/json':{'schema':obj({'data':array(ref('TaxonomySummary'))})}}
     operation('/api/v1/admin/'+route,'get','管理分类或标签列表',typ,page=True,params=[param('kind',string(enum=['blog','project','life'])),param('page',{'type':'integer','minimum':1}),param('page_size',{'type':'integer','minimum':1,'maximum':100})]);operation('/api/v1/admin/'+route,'post','创建分类或标签',typ,typ+'Create');operation('/api/v1/admin/'+route+'/{id}','put','更新分类或标签',typ,typ+'Update');operation('/api/v1/admin/'+route+'/{id}','delete','删除未引用分类或标签',params=[param('version',version,required=True)])
 op=operation('/api/v1/media/{id}','get','读取当前有权访问的图片',params=[param('variant',string(enum=['original','thumb']))]);op['responses']['200']['content']={'image/webp':{'schema':string(format='binary')},'image/png':{'schema':string(format='binary')},'image/jpeg':{'schema':string(format='binary')}}
-operation('/api/v1/admin/media','get','管理媒体列表','Media',page=True,params=paging+[param('unused',boolean)])
+operation('/api/v1/admin/media','get','管理媒体列表','Media',page=True,params=paging+[param('unused',boolean),param('kind',string(enum=['blog','project','life'])),param('q',string(100))])
+operation('/api/v1/admin/media/stats','get','媒体按引用类型去重统计','MediaStats')
 op=operation('/api/v1/admin/media','post','上传并重编码一张图片','Media');op['requestBody']={'required':True,'content':{'multipart/form-data':{'schema':obj({'file':string(format='binary',description='JPEG/PNG/WebP，最大 10 MiB'),'alt':string(200)},required=['file'])}}}
 operation('/api/v1/admin/media/{id}','delete','删除未引用媒体')
 operation('/api/v1/admin/dashboard','get','内容数量与最近更新','Dashboard')
@@ -139,6 +148,10 @@ def ts(schema):
     if '$ref' in schema:return schema['$ref'].split('/')[-1]
     if 'enum' in schema:return ' | '.join(json.dumps(x,ensure_ascii=False) for x in schema['enum'])
     if 'oneOf' in schema:return ' | '.join(ts(x) for x in schema['oneOf'])
+    if 'anyOf' in schema and 'properties' in schema:
+        base=ts({k:v for k,v in schema.items() if k!='anyOf'})
+        branches=[ts(obj({k:schema['properties'][k] for k in branch['required']})) for branch in schema['anyOf']]
+        return '('+base+') & ('+' | '.join(branches)+')'
     if 'anyOf' in schema:return ' | '.join(ts(x) for x in schema['anyOf'])
     if 'allOf' in schema:return ' & '.join(ts(x) for x in schema['allOf'])
     if schema.get('format')=='binary':return 'Blob'

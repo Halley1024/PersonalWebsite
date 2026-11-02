@@ -1,14 +1,16 @@
 import { keys } from "./keys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-import { mediaApi } from "../api/media";
+import { mediaApi, type MediaFilters } from "../api/media";
 export const useMedia = (
-  params: { page?: number; page_size?: number; unused?: boolean } = {},
+  params: MediaFilters = {},
 ) =>
   useQuery({
     queryKey: keys.media(params),
     queryFn: ({ signal }) => mediaApi.list(params, signal),
   });
+
+export const useMediaStats = () => useQuery({ queryKey: ["admin", "media", "stats"], queryFn: ({ signal }) => mediaApi.stats(signal).then((result) => result.data) });
 
 export function useMediaMutations() {
   const client = useQueryClient();
@@ -20,6 +22,6 @@ export function useMediaMutations() {
         mediaApi.upload(file, alt),
       onSuccess,
     }),
-    remove: useMutation({ mutationFn: mediaApi.remove, onSuccess }),
+    remove: useMutation({ mutationFn: (id: string) => mediaApi.remove(id), onSuccess }),
   };
 }

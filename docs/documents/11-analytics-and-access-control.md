@@ -17,7 +17,7 @@
 | 设备 | 服务端根据 User-Agent 归类 desktop/mobile/tablet/unknown，不长期保存原始 UA |
 | 平均停留时间 | 首期没有可靠的离页/心跳采集，返回 null，UI 显示“暂未采集”，不套用演示数值 |
 
-所有按天查询以 Asia/Shanghai 自然日为准；时间戳存 UTC。days=7/30 包括今天，今天数据尚未结束；环比对照前一完整等长自然日区间，UI 标注“含今日，尚未结束”。日期序列缺失补 0。来源/设备的计数以 PV 为分母，百分比展示可四舍五入。
+所有按天查询以 Asia/Shanghai 自然日为准；时间戳存 UTC。days=7/30 包括今天，最近一月固定为 30 天；days=365 表示含本月的最近 12 个自然月，按月返回序列，本月统计截至今日；年度 UV 在月内、周期内分别去重，不累加每日 UV。7/30 天统计中，今天数据尚未结束；环比对照前一完整等长自然日区间，UI 标注“含今日，尚未结束”。日期序列缺失补 0。来源/设备的计数以 PV 为分母，百分比展示可四舍五入。
 
 visitor_hash 来源于服务端随机访客 Cookie 的 HMAC，不是 IP，也不使用浏览器指纹。Cookie 生产名 `__Host-visit_id`，Secure/HttpOnly/SameSite=Lax/Path=/，30 天有效，无 Domain；无 Cookie 时服务端生成至少 128 bit 随机值，开发使用独立非 Secure 名。HMAC 密钥从 secret 文件读取，整个查询窗口保持一致；轮换需保留 key 版本并明确历史身份不可自动合并。前端首次事件等待完成再发送下一事件，减少首次并发产生不同身份；Cookie 被禁用时每次可能计为新访客。
 
@@ -51,8 +51,8 @@ visitor_hash 来源于服务端随机访客 Cookie 的 HMAC，不是 IP，也不
 
 | 方法与路径（/api/v1 下） | 查询/响应 |
 | --- | --- |
-| GET /admin/analytics | days=7 或 30，默认 7；返回 One<Analytics> |
-| GET /admin/visits | start_date/end_date，含首尾的北京时间日期；默认最近 7 天，上限 30 天，且位于保留期内；q≤100、source、region_id、page/page_size（1/20，上限 50）；返回 Page<Visit> |
+| GET /admin/analytics | days=7、30 或 365，默认 7；365 按最近 12 个自然月统计；返回 One<Analytics> |
+| GET /admin/visits | start_date/end_date，含首尾的北京时间日期；默认最近 7 天；仅可查询含今日在内的最近 30 个北京时间自然日，未来日期不可选；q≤100、source、region_id、page/page_size（1/20，上限 50）；返回 Page<Visit> |
 | GET /admin/regions | 返回 One<Region[]>，目录稳定排序；包含 unknown 供筛选，unknown 不可封锁 |
 | GET /admin/access-rules | scope=ip/region、state=active/expired/disabled、q≤100、page/page_size（1/20，上限 50）；省略表示全部；返回 Page<AccessRule> |
 | POST /admin/access-rules | 创建规则，201 One<AccessRule> 和 Location |
@@ -151,3 +151,7 @@ IP 命中或规范区域命中任意有效规则即拒绝；解除某 IP 不覆�
 ## 6. 验收边界
 
 使用固定事件集验证跨日同一访客的范围 UV、event_id 去重、来源/设备汇总、日期补零和环比空基数。使用真实 HTTP 请求验证静态入口/API/媒体均被规则拒绝，区域未知和服务故障路径正确；解除 IP 后区域规则仍命中。具体场景见 [09](09-implementation-and-testing.md)。现有原型徽标或本地规则列表不能作为验收依据。
+
+### 年度统计存储补充
+
+迁移 `0006_create_analytics_history.sql` 新增不含 IP、区域、网络、页面路径和标题的统计历史表。维护任务在删除 60 天前的访问明细前，原子归档 event_id、occurred_at、visitor_hash、content_id、source、device；保留 730 个北京时间自然日，以支持年度统计及等长前期对比。visitor_hash 为假名化标识，不属于完全匿名数据。年度数据和 7/30 天数据均经 analytics_events 视图统一读取，月 UV 与周期 UV 独立去重。原始 IP 明细仍只保留 60 天；analytics_daily 保留期不变。此前已清理的原始事件无法从日 UV 汇总恢复精确月/年 UV，历史数据需随新版本持续积累。部署时先执行迁移，再重启后端，并继续运行每日 maintenance。

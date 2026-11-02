@@ -65,8 +65,8 @@
   --studio-bg: rgba(9, 16, 25, 0.8);
   --studio-text: #c3cfdf;
   --line-number: #37475a;
-  --hero-terminal-bg: linear-gradient(140deg, #101d2aaa, #0b111c);
-  --hero-terminal-text: #9bdbcf;
+  --hero-terminal-bg: #0c141e;
+  --hero-terminal-text: #bac8d6;
   --popover-shadow: 0 16px 50px #0008;
   --card-shadow: 0 25px 75px #0003, 0 0 70px #2dd4bf05;
   --login-shadow: 0 24px 80px -45px rgba(0, 0, 0, 0.7);

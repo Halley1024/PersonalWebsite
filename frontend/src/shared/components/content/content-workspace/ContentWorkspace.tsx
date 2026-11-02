@@ -112,16 +112,22 @@ export function ContentWorkspace({
           replace: true,
           state: failure
             ? {
-                publishError: `草稿已保存，但发布未完成：${errorMessage(failure)}`,
-              }
+              publishError: `草稿已保存，但发布未完成：${errorMessage(failure)}`,
+            }
             : null,
         });
       }
     }
   }
+  function abandon() {
+    form.discard();
+    setError(undefined);
+    allow.current = true;
+    navigate(`/admin/contents?kind=${kind}`);
+  }
   return (
     <>
-      <PageHeading
+      <div className={styles.heading}><PageHeading
         eyebrow={`CONTENT / ${kind.toUpperCase()}`}
         title={`${item ? "编辑" : "新建"}${kindNames[kind]}`}
         description={
@@ -134,6 +140,7 @@ export function ContentWorkspace({
         actions={
           <>
             <ButtonLink to="/admin/contents">返回列表</ButtonLink>
+            {!server && <Button variant="ghost" className={styles.discard} disabled={busy} onClick={abandon}>放弃内容</Button>}
             <Button
               variant="ghost"
               loading={busy}
@@ -152,7 +159,7 @@ export function ContentWorkspace({
             )}
           </>
         }
-      />
+      /></div>
       <ErrorNotice error={error} />
       <div className={styles.state} role="status">
         {form.dirty ? "● 有未保存的修改" : "✓ 当前修改已保存"}

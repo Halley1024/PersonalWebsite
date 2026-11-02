@@ -1,143 +1,106 @@
 import { Link, useParams } from "react-router-dom";
-import { useMemo } from "react";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { useMemo, useRef } from "react";
 import { paths, type Kind } from "../../../api/content";
 import { ApiError } from "../../../api/errors";
 import { usePublicDetail } from "../../../queries/content";
+import { usePublicProfile } from "../../../queries/profile";
 import { useSeo } from "../../../hooks/useSeo";
 import { usePageview } from "../../../hooks/usePageview";
 import { date } from "../../../utils/date";
-import { kindNames, stateNames } from "../../../utils/content";
-import { safeLink } from "../../../utils/url";
-import { toc } from "../markdown-renderer/markdown";
+import { categoryNames, kindNames } from "../../../utils/content";
 import { MarkdownRenderer } from "../markdown-renderer/MarkdownRenderer";
 import { QueryState } from "../../ui/query-state/QueryState";
 import { StatusView } from "../../feedback/status-view/StatusView";
+import { ArticleNavigation } from "./ArticleNavigation";
+import { ContentMetadata, ExternalLinks } from "./ContentMetadata";
+import { readingMinutes } from "./reading";
+import { useArticleReading } from "./useArticleReading";
 import styles from "./ContentDetail.module.css";
+
+const sections = { blog: "02 / Blog", project: "03 / Works", life: "04 / Life" };
+const coverWords = { blog: "NOTES", project: "PROJECT", life: "MOMENTS" };
+
 export function ContentDetail({ kind }: { kind: Kind }) {
   const { slug = "" } = useParams();
   const query = usePublicDetail(kind, slug);
+  const profile = usePublicProfile();
   const item = query.data;
-  useSeo(
-    item?.seo_title || item?.title || kindNames[kind],
-    item?.seo_description || item?.excerpt,
-  );
+  const displayDate = item?.life?.occurred_on || item?.occurred_on || item?.published_at;
+  const body = useRef<HTMLDivElement>(null);
+  const reading = useArticleReading(body, item?.body_markdown || "", `${kind}/${slug}`, !!item);
+  const markdown = useMemo(() => <MarkdownRenderer value={item?.body_markdown || ""} />, [item?.body_markdown]);
+  const author = profile.data?.display_name || "站主";
+  useSeo(item?.seo_title || item?.title || kindNames[kind], item?.seo_description || item?.excerpt);
   usePageview(query.isSuccess);
-  const headings = useMemo(
-    () => toc(item?.body_markdown || ""),
-    [item?.body_markdown],
+  const outline = (mobile = false) => (
+    <nav className={styles.toc} aria-label={mobile ? "移动端文章目录" : "文章目录"}>
+      {reading.headings.map((heading, index) => (
+        <a key={heading.id} href={`#${heading.id}`} aria-current={reading.active === heading.id ? "location" : undefined}
+          style={{ paddingLeft: 16 + Math.max(0, heading.level - (reading.headings[0]?.level || 1)) * 10 }}>
+          <span>{String(index + 1).padStart(2, "0")}</span>{heading.title}
+        </a>
+      ))}
+    </nav>
   );
-  if (
-    query.error instanceof ApiError &&
-    [403, 404].includes(query.error.status)
-  )
+  if (query.error instanceof ApiError && [403, 404].includes(query.error.status))
     return <StatusView forbidden={query.error.status === 403} />;
   return (
-    <QueryState
-      loading={query.isPending}
-      error={query.error}
-      retry={() => void query.refetch()}
-    >
+    <QueryState loading={query.isPending} error={query.error} retry={() => void query.refetch()}>
       {item && (
-        <article className={styles.article}>
-          <Link to={`/${paths[kind]}`} className={styles.back}>
-            <ArrowLeft size={15} />
-            返回{kindNames[kind]}
-          </Link>
-          <header className={styles.header}>
-            <div className={styles.meta}>
-              {item.category?.name || kindNames[kind]} <span>/</span>{" "}
-              <time>{date(item.occurred_on || item.published_at)}</time>
-            </div>
-            <h1>{item.title}</h1>
-            <p>{item.excerpt}</p>
-            <div className={styles.tags}>
-              {item.tags.map((tag) => (
-                <Link key={tag.id} to={`/${paths[kind]}?tag=${tag.slug}`}>
-                  # {tag.name}
-                </Link>
-              ))}
-            </div>
-          </header>
-          {item.cover && (
-            <img
-              className={styles.cover}
-              src={item.cover.url}
-              width={item.cover.width}
-              height={item.cover.height}
-              alt={item.cover.alt}
-            />
-          )}
-          {item.project && (
-            <div className={styles.project}>
-              <span>{stateNames[item.project.project_stage]}</span>
-              <span>
-                {item.project.started_on} — {item.project.ended_on || "至今"}
-              </span>
-              {item.project.tech_stack.map((t) => (
-                <span key={t}>{t}</span>
-              ))}
-              {[
-                ["源码", item.project.repository_url],
-                ["在线演示", item.project.demo_url],
-              ].map(([label, url]) =>
-                url && safeLink(url) ? (
-                  <a
-                    key={label}
-                    href={safeLink(url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {label}
-                    <ArrowUpRight size={14} />
-                  </a>
-                ) : null,
+        <div className={styles.page}>
+          <div className={styles.progress} aria-hidden="true"><span ref={reading.progress} /></div>
+          <nav className={styles.breadcrumb} aria-label="当前位置">
+            <Link to="/">首页</Link><span>/</span><Link to={`/${paths[kind]}`}>{kindNames[kind]}</Link><span>/</span><span>正文</span>
+          </nav>
+          <div className={styles.layout}>
+            <article className={styles.article} aria-labelledby="article-title">
+              <header className={styles.header}>
+                <p className={styles.label}>{sections[kind]}</p>
+                <h1 id="article-title">{item.title}</h1>
+                <div className={styles.meta}>
+                  <span className={styles.author}><span className={styles.authorMark} aria-hidden="true">{Array.from(author)[0]}</span>{author}</span>
+                  <span aria-hidden="true">/</span><time dateTime={displayDate}>{date(displayDate)}</time>
+                  <span aria-hidden="true">/</span><span>约 {readingMinutes(item.body_markdown)} 分钟阅读</span>
+                </div>
+                {item.excerpt && <p className={styles.lead}>{item.excerpt}</p>}
+              </header>
+              {item.cover ? (
+                <img className={styles.cover} src={item.cover.url} width={item.cover.width} height={item.cover.height} alt={item.cover.alt} />
+              ) : (
+                <div className={styles.coverPlaceholder} aria-hidden="true">
+                  <div className={styles.coverTopline}><span>{author.toUpperCase()} / FIELD NOTES</span><span>{date(item.published_at)}</span></div>
+                  <span className={styles.coverWord}>{coverWords[kind]}</span>
+                  <div className={styles.coverCaption}><span>{categoryNames(item) || kindNames[kind]}</span><span>build, ship, iterate.</span></div>
+                </div>
               )}
-            </div>
-          )}
-          {item.life?.location_label && (
-            <p className={styles.location}>
-              {item.life.occurred_on} · {item.life.location_label}
-            </p>
-          )}
-          <div className={styles.reading}>
-            <MarkdownRenderer value={item.body_markdown} />
-            {headings.length > 0 && (
-              <aside className={styles.toc}>
-                <strong>本页目录</strong>
-                {headings.map((h) => (
-                  <a
-                    href={`#${h.id}`}
-                    key={h.id}
-                    style={{ paddingLeft: (h.level - 1) * 10 }}
-                  >
-                    {h.title}
-                  </a>
-                ))}
-              </aside>
-            )}
+              {reading.headings.length > 0 && <details className={styles.mobileToc}><summary>本文目录</summary>{outline(true)}</details>}
+              <div ref={body} className={styles.body}>{markdown}</div>
+              {item.gallery.length > 0 && (
+                <div className={styles.gallery}>{item.gallery.map((image) => (
+                  <figure key={image.media.id}>
+                    <img src={image.media.url} width={image.media.width} height={image.media.height} alt={image.alt || image.media.alt} loading="lazy" />
+                    {image.alt && <figcaption>{image.alt}</figcaption>}
+                  </figure>
+                ))}</div>
+              )}
+              <div className={styles.end}><span aria-hidden="true">✦</span>感谢阅读，下一篇见。</div>
+              <div className={styles.bottomBar}>
+                <Link to={`/${paths[kind]}`}>← 返回{kindNames[kind]}列表</Link><a href="#article-title">回到顶部 ↑</a>
+              </div>
+              <ArticleNavigation kind={kind} id={item.id} />
+            </article>
+            <aside className={styles.sidebar} aria-label="阅读辅助">
+              <div className={styles.sticky}>
+                <div className={styles.desktopToc}>
+                  <p className={styles.tocLabel}>ON THIS PAGE</p><h2 className={styles.sidebarTitle}>本文目录</h2>
+                  {reading.headings.length ? outline() : <p className={styles.noHeadings}>正文暂无章节标题。</p>}
+                </div>
+                <ContentMetadata item={item} />
+                <ExternalLinks links={reading.links} />
+              </div>
+            </aside>
           </div>
-          {item.gallery.length > 0 && (
-            <div className={styles.gallery}>
-              {item.gallery.map((image) => (
-                <figure key={image.media.id}>
-                  <img
-                    src={image.media.url}
-                    width={image.media.width}
-                    height={image.media.height}
-                    alt={image.alt || image.media.alt}
-                    loading="lazy"
-                  />
-                  {image.alt && <figcaption>{image.alt}</figcaption>}
-                </figure>
-              ))}
-            </div>
-          )}
-          <footer className={styles.footer}>
-            更新于 {date(item.updated_at)}{" "}
-            <Link to={`/${paths[kind]}`}>继续阅读 →</Link>
-          </footer>
-        </article>
+        </div>
       )}
     </QueryState>
   );

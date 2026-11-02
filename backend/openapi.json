@@ -4002,6 +4002,201 @@
         }
       }
     },
+    "/api/v1/admin/contents/{id}/taxonomy": {
+      "put": {
+        "summary": "只修改内容的分类和标签，适用于所有内容状态",
+        "operationId": "put_api_v1_admin_contents_id_taxonomy",
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AdminDetail"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentTaxonomyUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/categories": {
       "get": {
         "summary": "公开已发布引用的分类或标签",
@@ -6083,6 +6278,28 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "blog",
+                "project",
+                "life"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
           }
         ],
         "responses": {
@@ -6439,6 +6656,165 @@
                   "file"
                 ],
                 "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/media/stats": {
+      "get": {
+        "summary": "媒体按引用类型去重统计",
+        "operationId": "get_api_v1_admin_media_stats",
+        "security": [
+          {
+            "AdminCookie": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MediaStats"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "统一错误响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -9345,6 +9721,39 @@
         ],
         "additionalProperties": false
       },
+      "ContentTaxonomyUpdate": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "category_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
+          },
+          "tag_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 10,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "version",
+          "category_ids",
+          "tag_ids"
+        ],
+        "additionalProperties": false
+      },
       "GalleryItem": {
         "type": "object",
         "properties": {
@@ -9396,6 +9805,10 @@
               }
             ]
           },
+          "cover_alt": {
+            "type": "string",
+            "maxLength": 200
+          },
           "category_id": {
             "anyOf": [
               {
@@ -9406,6 +9819,14 @@
                 "type": "null"
               }
             ]
+          },
+          "category_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
           },
           "tag_ids": {
             "type": "array",
@@ -9493,7 +9914,6 @@
           "excerpt",
           "body_markdown",
           "cover_media_id",
-          "category_id",
           "tag_ids",
           "featured",
           "sort_order",
@@ -9505,7 +9925,19 @@
           "kind",
           "slug"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "category_ids"
+            ]
+          },
+          {
+            "required": [
+              "category_id"
+            ]
+          }
+        ]
       },
       "UpdateContent": {
         "type": "object",
@@ -9535,6 +9967,10 @@
               }
             ]
           },
+          "cover_alt": {
+            "type": "string",
+            "maxLength": 200
+          },
           "category_id": {
             "anyOf": [
               {
@@ -9545,6 +9981,14 @@
                 "type": "null"
               }
             ]
+          },
+          "category_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
           },
           "tag_ids": {
             "type": "array",
@@ -9624,7 +10068,6 @@
           "excerpt",
           "body_markdown",
           "cover_media_id",
-          "category_id",
           "tag_ids",
           "featured",
           "sort_order",
@@ -9635,7 +10078,19 @@
           "life",
           "version"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "category_ids"
+            ]
+          },
+          {
+            "required": [
+              "category_id"
+            ]
+          }
+        ]
       },
       "ChangeStatus": {
         "type": "object",
@@ -9706,6 +10161,12 @@
                 "type": "null"
               }
             ]
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxonomySummary"
+            }
           },
           "tags": {
             "type": "array",
@@ -9825,6 +10286,12 @@
                 "type": "null"
               }
             ]
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxonomySummary"
+            }
           },
           "tags": {
             "type": "array",
@@ -10003,6 +10470,12 @@
               }
             ]
           },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxonomySummary"
+            }
+          },
           "tags": {
             "type": "array",
             "items": {
@@ -10139,6 +10612,12 @@
               }
             ]
           },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxonomySummary"
+            }
+          },
           "tags": {
             "type": "array",
             "items": {
@@ -10219,6 +10698,10 @@
               }
             ]
           },
+          "cover_alt": {
+            "type": "string",
+            "maxLength": 200
+          },
           "category_id": {
             "anyOf": [
               {
@@ -10229,6 +10712,14 @@
                 "type": "null"
               }
             ]
+          },
+          "category_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
           },
           "tag_ids": {
             "type": "array",
@@ -10434,6 +10925,12 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "content_count": {
+            "type": "integer",
+            "minimum": 0,
+            "readOnly": true,
+            "description": "关联内容数，包含草稿、已发布和归档内容"
           }
         },
         "required": [
@@ -10444,7 +10941,8 @@
           "id",
           "version",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "content_count"
         ],
         "additionalProperties": false
       },
@@ -10540,6 +11038,12 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "content_count": {
+            "type": "integer",
+            "minimum": 0,
+            "readOnly": true,
+            "description": "关联内容数，包含草稿、已发布和归档内容"
           }
         },
         "required": [
@@ -10549,7 +11053,8 @@
           "id",
           "version",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "content_count"
         ],
         "additionalProperties": false
       },
@@ -10610,6 +11115,39 @@
           "byte_size",
           "created_at",
           "reference_count"
+        ],
+        "additionalProperties": false
+      },
+      "MediaStats": {
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "blog": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "project": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "life": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unused": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "all",
+          "blog",
+          "project",
+          "life",
+          "unused"
         ],
         "additionalProperties": false
       },

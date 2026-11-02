@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font: 600 12px var(--mono);
+  font: 600 13px var(--mono);
   padding: 0 8px;
 }
 .brand > span {
@@ -31,7 +31,7 @@
 .brand small {
   display: block;
   color: var(--faint);
-  font-size: 8px;
+  font-size: 10px;
   margin-top: 6px;
   letter-spacing: 0.08em;
 }
@@ -43,7 +43,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--dim);
 }
 .workspace i {
@@ -54,11 +54,11 @@
 }
 .workspace span {
   margin-left: auto;
-  font: 9px var(--mono);
+  font: 11px var(--mono);
   color: var(--faint);
 }
 .label {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   color: var(--faint);
   padding: 0 12px;
@@ -73,7 +73,7 @@
   border: 1px solid transparent;
   border-radius: 8px;
   color: var(--dim);
-  font-size: 12px;
+  font-size: 14px;
 }
 .link:hover {
   color: var(--text);
@@ -91,25 +91,18 @@
   margin-top: auto;
   padding-top: 26px;
 }
-.bottom > a {
-  display: flex;
-  justify-content: space-between;
-  color: var(--dim);
-  font-size: 11px;
-  margin: 0 10px 17px;
-}
 .identity {
   border-top: 1px solid var(--border);
   padding: 16px 7px 0;
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .identity small {
   display: block;
   color: var(--faint);
-  font-size: 9px;
+  font-size: 11px;
 }
 .identity strong {
   font-weight: 500;

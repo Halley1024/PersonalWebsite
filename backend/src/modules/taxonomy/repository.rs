@@ -5,6 +5,13 @@ use uuid::Uuid;
 pub fn table(tags: bool) -> &'static str {
     super::model::TaxonomyTable::from(tags).as_str()
 }
+fn content_count(tags: bool) -> &'static str {
+    if tags {
+        "(SELECT count(*) FROM content_tags binding WHERE binding.tag_id=t.id)"
+    } else {
+        "(SELECT count(*) FROM content_categories binding WHERE binding.category_id=t.id)"
+    }
+}
 pub async fn public_taxonomy_repository(
     pool: &PgPool,
     tags: bool,
@@ -13,7 +20,7 @@ pub async fn public_taxonomy_repository(
     let usage = if tags {
         "EXISTS(SELECT 1 FROM content_tags ct JOIN content_items c ON c.id=ct.content_id WHERE ct.tag_id=t.id AND c.status='published')"
     } else {
-        "EXISTS(SELECT 1 FROM content_items c WHERE c.category_id=t.id AND c.status='published')"
+        "EXISTS(SELECT 1 FROM content_categories cc JOIN content_items c ON c.id=cc.content_id WHERE cc.category_id=t.id AND c.status='published')"
     };
     let rows:Vec<(Value,)>=sqlx::query_as(&format!("SELECT jsonb_build_object('id',id,'name',name,'slug',slug) FROM {} t WHERE kind=$1 AND {usage} ORDER BY name,id",table(tags))).bind(kind).fetch_all(pool).await?;
     Ok(rows.into_iter().map(|r| r.0).collect())
@@ -36,7 +43,8 @@ pub async fn list_taxonomy_repository(
     .bind(kind)
     .fetch_one(&mut *tx)
     .await?;
-    let rows:Vec<(Value,)>=sqlx::query_as(&format!("SELECT to_jsonb(t) FROM {t} t WHERE ($1::text IS NULL OR kind=$1) ORDER BY name,id LIMIT $2 OFFSET $3")).bind(kind).bind(size).bind(offset).fetch_all(&mut *tx).await?;
+    let count = content_count(tags);
+    let rows:Vec<(Value,)>=sqlx::query_as(&format!("SELECT to_jsonb(t) || jsonb_build_object('content_count',{count}) FROM {t} t WHERE ($1::text IS NULL OR kind=$1) ORDER BY name,id LIMIT $2 OFFSET $3")).bind(kind).bind(size).bind(offset).fetch_all(&mut *tx).await?;
     tx.commit().await?;
     Ok((rows.into_iter().map(|r| r.0).collect(), total))
 }
@@ -46,8 +54,8 @@ pub async fn get_taxonomy_repository(
     id: Uuid,
 ) -> AppResult<Value> {
     let r: Option<(Value,)> = sqlx::query_as(&format!(
-        "SELECT to_jsonb(t) FROM {} t WHERE id=$1 FOR UPDATE",
-        table(tags)
+        "SELECT to_jsonb(t) || jsonb_build_object('content_count',{}) FROM {} t WHERE id=$1 FOR UPDATE",
+        content_count(tags), table(tags)
     ))
     .bind(id)
     .fetch_optional(&mut **tx)

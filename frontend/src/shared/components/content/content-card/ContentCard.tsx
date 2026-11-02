@@ -1,14 +1,15 @@
+import { categoryNames } from "../../../utils/content";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Code2, FileText, Camera } from "lucide-react";
 import type { PublicCard } from "../../../api/generated";
 import { paths } from "../../../api/content";
 import { date } from "../../../utils/date";
 import styles from "./ContentCard.module.css";
-export function ContentCard({ item }: { item: PublicCard }) {
+export function ContentCard({ item, className = "" }: { item: PublicCard; className?: string }) {
   const Icon =
     item.kind === "project" ? Code2 : item.kind === "life" ? Camera : FileText;
   return (
-    <article className={`${styles.card} ${styles[item.kind]}`}>
+    <article className={`${styles.card} ${styles[item.kind]} ${className}`}>
       <Link
         className={styles.image}
         to={`/${paths[item.kind]}/${item.slug}`}
@@ -38,7 +39,7 @@ export function ContentCard({ item }: { item: PublicCard }) {
       <div className={styles.body}>
         <div className={styles.meta}>
           <span>
-            {item.category?.name ||
+            {categoryNames(item) ||
               { blog: "技术笔记", project: "项目作品", life: "生活记录" }[
                 item.kind
               ]}

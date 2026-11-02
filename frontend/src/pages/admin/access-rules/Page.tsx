@@ -50,7 +50,7 @@ export default function Page() {
         description="规则由服务器执行，支持 IP 与区域封锁。解除单个 IP 不会覆盖区域规则。"
         actions={<Button onClick={() => setForm({})}>＋ 新增规则</Button>}
       />
-      <div className={forms.toolbar}>
+      <div className={`${forms.toolbar} ${styles.toolbar}`}>
         <input
           aria-label="搜索规则"
           placeholder="搜索对象或原因…"
@@ -85,15 +85,15 @@ export default function Page() {
         empty={query.data?.data.length === 0}
         emptyText="暂无匹配的封锁规则。"
       >
-        <div className={table.scroll}>
-          <table className={table.table}>
+        <div className={table.scroll} role="region" aria-label="访问规则列表" tabIndex={0}>
+          <table className={`${table.table} ${styles.rulesTable}`}>
             <thead>
               <tr>
-                <th>封锁对象</th>
-                <th>原因</th>
-                <th>有效期</th>
-                <th>状态</th>
-                <th>操作</th>
+                <th scope="col">封锁对象</th>
+                <th scope="col">原因</th>
+                <th scope="col">有效期</th>
+                <th scope="col">状态</th>
+                <th scope="col">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -121,7 +121,7 @@ export default function Page() {
                     />
                   </td>
                   <td>
-                    <div className={table.actions}>
+                    <div className={styles.actions}>
                       <button onClick={() => setForm({ item: row })}>
                         编辑 / 续期
                       </button>
@@ -134,12 +134,14 @@ export default function Page() {
                           禁用
                         </button>
                       )}
-                      <button
-                        className={table.danger}
-                        onClick={() => setAction({ item: row, remove: true })}
-                      >
-                        删除
-                      </button>
+                      <span className={styles.destructive}>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => setAction({ item: row, remove: true })}
+                        >
+                          删除
+                        </button>
+                      </span>
                     </div>
                   </td>
                 </tr>
@@ -173,7 +175,8 @@ export default function Page() {
       <ConfirmDialog
         open={!!action}
         title={action?.remove ? "永久删除规则" : "禁用规则"}
-        description="操作成功后将更新服务器规则。目标仍可能命中其他有效规则。"
+        description={`将${action?.remove ? "永久删除" : "禁用"}“${action?.item.target_label ?? ""}”的规则。目标仍可能命中其他有效规则。`}
+        confirmText={action?.remove ? "删除规则" : "禁用规则"}
         danger={action?.remove}
         onClose={() => setAction(undefined)}
         onConfirm={async () => {

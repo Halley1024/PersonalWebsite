@@ -24,6 +24,8 @@ erDiagram
     categories o|--o{ content_items : classifies
     content_items ||--o| project_details : extends
     content_items ||--o| life_details : extends
+    content_items ||--o{ content_categories : has
+    categories ||--o{ content_categories : attached
     content_items ||--o{ content_tags : has
     tags ||--o{ content_tags : attached
     content_items ||--o{ content_media : references
@@ -63,7 +65,7 @@ bio_markdown 支持安全文本格式，不支持图片；头像通过 avatar_me
 | body_markdown | text NOT NULL，默认空字符串 |
 | status | varchar(16)，draft/published/archived，默认 draft |
 | cover_media_id | uuid/null，FK media_files RESTRICT |
-| category_id | uuid/null，复合 FK 与 kind 绑定 |
+| category_id | uuid/null，兼容旧接口的首个分类，复合 FK 与 kind 绑定；全部分类存于 content_categories |
 | featured / sort_order | boolean 默认 false / integer 默认 0 |
 | seo_title / seo_description | varchar(70)/varchar(160)，可空 |
 | published_at | timestamptz/null，首次发布后保留 |
@@ -99,6 +101,7 @@ CHECK (status <> 'published' OR published_at IS NOT NULL)
 | --- | --- |
 | `categories` | id PK；kind；name varchar(50)；slug varchar(100)；sort_order int；version；created_at/updated_at；UNIQUE(kind,slug)、UNIQUE(id,kind) |
 | `tags` | id PK；kind；name varchar(50)；slug varchar(100)；version；created_at/updated_at；UNIQUE(kind,slug)、UNIQUE(id,kind) |
+| `content_categories` | content_id、category_id、kind、position；PK(content_id,category_id)，UNIQUE(content_id,position)；两个复合 FK 强制 kind 一致；内容删除 CASCADE，分类删除 RESTRICT |
 | `content_tags` | content_id、tag_id、kind；PK(content_id,tag_id)；两个复合 FK 强制 kind 一致；内容删除 CASCADE，标签删除 RESTRICT |
 | `content_media` | content_id、media_id、role（body/gallery）、position int/null、alt varchar(200)/null；PK(content_id,media_id,role)；内容删除 CASCADE、媒体删除 RESTRICT |
 

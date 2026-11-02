@@ -1,14 +1,12 @@
-import { useState } from "react";
 import type { ContentDraft } from "./types";
-import { useTaxonomyOptions } from "../../../queries/taxonomy";
+import { DatePicker } from "../../ui/date-picker/DatePicker";
 import { Field } from "../../ui/field/Field";
 import { Panel } from "../../ui/panel/Panel";
-import { Button } from "../../ui/button/Button";
 import { MarkdownEditor } from "../markdown-editor/MarkdownEditor";
-import { MediaPicker } from "../../media/media-picker/MediaPicker";
-import { GalleryEditor } from "../../media/gallery-editor/GalleryEditor";
 import forms from "../../../styles/forms.module.css";
 import styles from "./ContentEditor.module.css";
+import { ContentCover } from "./ContentCover";
+import { ContentTaxonomy } from "./ContentTaxonomy";
 export function ContentEditor({
   value,
   onChange,
@@ -20,9 +18,6 @@ export function ContentEditor({
   editing: boolean;
   disabled?: boolean;
 }) {
-  const categories = useTaxonomyOptions("categories", value.kind);
-  const tags = useTaxonomyOptions("tags", value.kind);
-  const [cover, setCover] = useState(false);
   const set = <K extends keyof ContentDraft>(key: K, v: ContentDraft[K]) =>
     onChange({ ...value, [key]: v });
   return (
@@ -105,25 +100,27 @@ export function ContentEditor({
                 />
               </Field>
               <Field label="开始日期">
-                <input
-                  type="date"
+                <DatePicker
+                  label="开始日期"
                   value={value.project.started_on}
-                  onChange={(e) =>
+                  onChange={(day) =>
                     set("project", {
                       ...value.project!,
-                      started_on: e.target.value,
+                      started_on: day,
                     })
                   }
                 />
               </Field>
               <Field label="结束日期" hint="留空表示至今">
-                <input
-                  type="date"
+                <DatePicker
+                  label="结束日期"
                   value={value.project.ended_on || ""}
-                  onChange={(e) =>
+                  min={value.project.started_on || undefined}
+                  clearable
+                  onChange={(day) =>
                     set("project", {
                       ...value.project!,
-                      ended_on: e.target.value || null,
+                      ended_on: day || null,
                     })
                   }
                 />
@@ -161,11 +158,11 @@ export function ContentEditor({
           <Panel title="生活记录">
             <div className={forms.grid}>
               <Field label="发生日期">
-                <input
-                  type="date"
+                <DatePicker
+                  label="发生日期"
                   value={value.life.occurred_on}
-                  onChange={(e) =>
-                    set("life", { ...value.life!, occurred_on: e.target.value })
+                  onChange={(day) =>
+                    set("life", { ...value.life!, occurred_on: day })
                   }
                 />
               </Field>
@@ -185,89 +182,13 @@ export function ContentEditor({
             </div>
           </Panel>
         )}
-        {value.kind !== "blog" && (
-          <Panel title="内容相册">
-            <GalleryEditor
-              value={value.gallery}
-              onChange={(v) => set("gallery", v)}
-            />
-          </Panel>
-        )}
       </div>
       <aside className={styles.aside}>
-        <Panel title="封面图片">
-          {value.cover_media_id ? (
-            <>
-              <img
-                className={styles.cover}
-                src={`/api/v1/media/${value.cover_media_id}`}
-                alt="当前封面预览"
-              />
-              <div className={forms.row}>
-                <Button variant="ghost" onClick={() => setCover(true)}>
-                  替换封面
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => set("cover_media_id", null)}
-                >
-                  移除
-                </Button>
-              </div>
-            </>
-          ) : (
-            <Button variant="ghost" onClick={() => setCover(true)}>
-              选择封面
-            </Button>
-          )}
-          <p className={forms.hint}>替代文本使用媒体上传时的描述。</p>
+        <Panel title="文章封面">
+          <ContentCover mediaId={value.cover_media_id} alt={value.cover_alt || ""} onChange={(patch) => onChange({ ...value, ...patch })} />
         </Panel>
         <Panel title="分类与标签">
-          <div className={forms.stack}>
-            <Field label="分类">
-              <select
-                value={value.category_id || ""}
-                onChange={(e) => set("category_id", e.target.value || null)}
-              >
-                <option value="">不设置分类</option>
-                {categories.data?.map((row) => (
-                  <option key={row.id} value={row.id}>
-                    {row.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className={styles.tags}>
-              <span>标签（最多 10 个）</span>
-              {tags.data?.map((tag) => (
-                <label key={tag.id}>
-                  <input
-                    type="checkbox"
-                    checked={value.tag_ids.includes(tag.id)}
-                    disabled={
-                      !value.tag_ids.includes(tag.id) &&
-                      value.tag_ids.length >= 10
-                    }
-                    onChange={(e) =>
-                      set(
-                        "tag_ids",
-                        e.target.checked
-                          ? [...value.tag_ids, tag.id]
-                          : value.tag_ids.filter((id) => id !== tag.id),
-                      )
-                    }
-                  />
-                  {tag.name}
-                </label>
-              ))}
-              {!tags.data?.length && (
-                <small>请先在分类与标签页创建标签。</small>
-              )}
-            </div>
-            {(categories.isError || tags.isError) && (
-              <p role="alert">分类标签加载失败，请刷新页面重试。</p>
-            )}
-          </div>
+          <ContentTaxonomy kind={value.kind} categoryIds={value.category_ids ?? (value.category_id ? [value.category_id] : [])} tagIds={value.tag_ids} onChange={(patch) => onChange({ ...value, ...patch })} />
         </Panel>
         <Panel title="展示与 SEO">
           <div className={forms.stack}>
@@ -303,13 +224,6 @@ export function ContentEditor({
           </div>
         </Panel>
       </aside>
-      {cover && (
-        <MediaPicker
-          open
-          onClose={() => setCover(false)}
-          onSelect={(item) => set("cover_media_id", item.id)}
-        />
-      )}
     </fieldset>
   );
 }

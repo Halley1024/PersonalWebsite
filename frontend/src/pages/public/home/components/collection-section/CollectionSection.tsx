@@ -3,7 +3,9 @@ import { ArrowUpRight } from "lucide-react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { Page } from "../../../../../shared/api/client";
 import type { PublicCard } from "../../../../../shared/api/generated";
-import { ContentCard } from "../../../../../shared/components/content/content-card/ContentCard";
+import { BlogCard } from "../../../../../shared/components/content/blog-card/BlogCard";
+import { ProjectCard } from "../../../../../shared/components/content/project-card/ProjectCard";
+import { LifeCard } from "../../../../../shared/components/content/life-card/LifeCard";
 import { QueryState } from "../../../../../shared/components/ui/query-state/QueryState";
 import styles from "./CollectionSection.module.css";
 export function CollectionSection({
@@ -40,9 +42,11 @@ export function CollectionSection({
         emptyText="还没有已发布的内容，敬请期待。"
       >
         <div className={styles.grid}>
-          {query.data?.data.map((item) => (
-            <ContentCard key={item.id} item={item} />
-          ))}
+          {query.data?.data.map((item, index) => {
+            if (item.kind === "blog") return <BlogCard key={item.id} item={item} index={index} headingLevel={3} />;
+            if (item.kind === "project") return <ProjectCard key={item.id} item={item} headingLevel={3} />;
+            return <LifeCard key={item.id} item={item} index={index} headingLevel={3} />;
+          })}
         </div>
       </QueryState>
     </section>

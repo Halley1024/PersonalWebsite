@@ -4,15 +4,54 @@
 .intro {
   margin-top: 20px;
 }
-.avatar {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-top: 20px;
-}
-.avatar img {
-  height: 64px;
-  width: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-}
+.identityTop { --identity-label-height: 21px; --identity-input-height: 45px; --identity-field-gap: 8px; --identity-row-gap: 20px; --avatar-size: calc((var(--identity-label-height) + var(--identity-field-gap) + var(--identity-input-height)) * 2 + var(--identity-row-gap)); display: grid; grid-template-columns: var(--avatar-size) minmax(0, 1fr); align-items: stretch; gap: 20px; }
+.identityFields { display: grid; gap: var(--identity-row-gap); min-width: 0; }
+.identityFields > div { gap: var(--identity-field-gap); }
+.identityFields label { line-height: var(--identity-label-height); }
+.identityFields input { height: var(--identity-input-height); }
+.avatarField { width: var(--avatar-size); }
+.avatar { position: relative; width: 100%; aspect-ratio: 1; flex-shrink: 0; }
+.avatarTrigger { position: relative; display: block; width: 100%; height: 100%; aspect-ratio: 1; padding: 0; border-radius: 20px; overflow: hidden; background: transparent; transition: box-shadow .18s; }
+.avatarTrigger img, .avatarPlaceholder { display: block; width: 100%; height: 100%; object-fit: cover; }
+.avatarPlaceholder { display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: 40px; }
+.avatarOverlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0, 0, 0, .5); color: #fff; font-size: 14px; opacity: 0; transition: opacity .18s; }
+.avatarTrigger:hover, .avatarTrigger:focus-visible { box-shadow: 0 10px 26px rgba(0, 0, 0, .28); }
+.avatarTrigger:hover .avatarOverlay, .avatarTrigger:focus-visible .avatarOverlay { opacity: 1; }
+.avatarTrigger:focus-visible, .removeAvatar:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.removeAvatar { position: absolute; top: -9px; right: -9px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 3px solid var(--surface); border-radius: 50%; background: var(--danger); color: var(--on-danger); }
+.removeAvatar:hover { filter: brightness(1.1); }
+@media (max-width: 480px) { .identityTop { --identity-label-height: 20px; --identity-input-height: 40px; --identity-field-gap: 4px; --identity-row-gap: 16px; gap: 16px; } .identityFields input { padding: 8px 10px; } .avatarPlaceholder { font-size: 34px; } }
+@media (max-width: 360px) { .identityTop { --identity-input-height: 36px; --identity-row-gap: 8px; gap: 12px; } .identityFields input { padding: 6px 8px; } }
+@media (hover: none) { .avatarOverlay { opacity: 1; align-items: end; padding-bottom: 10px; background: linear-gradient(transparent 50%, rgba(0, 0, 0, .45)); font-size: 13px; } }
+@media (prefers-reduced-motion: reduce) { .avatarTrigger, .avatarOverlay { transition: none; } }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, 1fr); align-items: start; gap: 24px; }
+.fields { min-width: 0; }
+.fields fieldset { gap: 24px; }
+.fields label { font-size: 14px; }
+.fields input, .fields textarea, .fields select { font-size: 14px; }
+.fields textarea { min-height: 100px; line-height: 1.8; resize: vertical; }
+.fields .bio { min-height: 230px; font-family: var(--mono); }
+.fields small { font-size: 12px; line-height: 1.7; }
+.fields button { font-size: 14px; }
+.fields .section { counter-increment: profile-section; border-radius: 14px; }
+.fields { counter-reset: profile-section; }
+.section > div:first-child h2 { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+.section > div:first-child h2::before { content: "0" counter(profile-section); font: 12px var(--mono); color: var(--accent); }
+.section > div:first-child p { font-size: 13px; line-height: 1.7; }
+.skillGroups { max-height: 520px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; padding-right: 8px; }
+.saveActions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 16px; }
+.saveActions span { color: var(--dim); font-size: 13px; }
+.saveActions button { min-height: 44px; font-size: 14px; }
+@media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.fields input[readonly] { color: var(--accent); background: var(--bg-soft); cursor: default; font-family: var(--mono); }
+
+.saveActions .discardButton { color: var(--danger); }
+
+.heading > div { flex-wrap: wrap; }
+.heading > div > div:last-child { flex-shrink: 1; min-width: 0; max-width: 100%; }
+
+.experienceGrid > div:last-child { grid-column: 1 / -1; }
+.experienceGrid textarea { min-height: 140px; }
+.experienceHeader { flex-wrap: wrap; gap: 16px; }

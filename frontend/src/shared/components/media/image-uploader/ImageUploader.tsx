@@ -7,8 +7,10 @@ import { ErrorNotice } from "../../ui/error-notice/ErrorNotice";
 import styles from "./ImageUploader.module.css";
 export function ImageUploader({
   onUploaded,
+  onBusyChange,
 }: {
   onUploaded: (media: Media) => void;
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const [file, setFile] = useState<File>();
   const [alt, setAlt] = useState("");
@@ -34,6 +36,7 @@ export function ImageUploader({
       return;
     }
     setBusy(true);
+    onBusyChange?.(true);
     try {
       const { data } = await mutations.upload.mutateAsync({
         file: file,
@@ -47,6 +50,7 @@ export function ImageUploader({
     } catch (e) {
       if (mounted.current) setError(e);
     } finally {
+      onBusyChange?.(false);
       if (mounted.current) setBusy(false);
     }
   }

@@ -1,0 +1,11 @@
+.form { font-size: 14px; }
+.fields { gap: 24px; }
+.fields label { font-size: 14px; }
+.fields small { font-size: 12px; line-height: 1.7; }
+.fields input:not([type="checkbox"]), .fields select, .fields textarea { font-size: 14px; min-height: 44px; }
+.fields textarea { min-height: 100px; line-height: 1.7; resize: vertical; }
+.fields .enabled { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-soft); cursor: pointer; }
+.enabled input { width: 18px; height: 18px; }
+.hint { font-size: 13px; line-height: 1.8; color: var(--dim); margin-top: 20px; }
+.actions { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-top: 22px; margin-top: 24px; border-top: 1px solid var(--border); }
+.actions button { min-width: 108px; min-height: 44px; font-size: 14px; }

@@ -10,32 +10,8 @@
   gap: 22px;
   min-width: 0;
 }
-.cover {
-  width: 100%;
-  max-height: 180px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-.tags {
-  display: grid;
-  gap: 10px;
-  max-height: 250px;
-  overflow: auto;
-}
-.tags > span {
-  font-size: 12px;
-}
-.tags label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--dim);
-}
-.tags small {
-  color: var(--faint);
-}
+.editor label, .editor input, .editor textarea, .editor select { font-size: 14px; }
+.editor small { font-size: 12px; line-height: 1.7; }
 @media (max-width: 1100px) {
   .editor {
     grid-template-columns: 1fr;

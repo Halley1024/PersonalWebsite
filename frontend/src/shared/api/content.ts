@@ -7,6 +7,7 @@ import type {
   CreateContent,
   UpdateContent,
   ChangeStatus,
+  ContentTaxonomyUpdate,
 } from "./generated";
 export type Kind = "blog" | "project" | "life";
 export const paths: Record<Kind, string> = {
@@ -42,6 +43,8 @@ export const contentApi = {
     request<One<AdminDetail>>("/admin/contents", { method: "POST", body }),
   update: (id: string, body: UpdateContent) =>
     request<One<AdminDetail>>(`/admin/contents/${id}`, { method: "PUT", body }),
+  taxonomy: (id: string, body: ContentTaxonomyUpdate) =>
+    request<One<AdminDetail>>(`/admin/contents/${id}/taxonomy`, { method: "PUT", body }),
   status: (id: string, body: ChangeStatus) =>
     request<One<AdminDetail>>(`/admin/contents/${id}/status`, {
       method: "POST",

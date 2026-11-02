@@ -48,6 +48,35 @@ async fn request(
     let data = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
     (status, headers, data)
 }
+async fn assert_taxonomy_counts(
+    app: &Router,
+    cookie: &str,
+    categories: &[(&str, i64)],
+    tags: &[(&str, i64)],
+) {
+    for (directory, expected) in [("categories", categories), ("tags", tags)] {
+        let (status, _, result) = request(
+            app,
+            "GET",
+            &format!("/api/v1/admin/{directory}?kind=blog&page_size=100"),
+            None,
+            Some(cookie),
+            None,
+            false,
+        )
+        .await;
+        assert_eq!(status, 200, "{result}");
+        for (id, count) in expected {
+            let row = result["data"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|row| row["id"] == *id)
+                .unwrap();
+            assert_eq!(row["content_count"], *count, "{directory} {id}: {row}");
+        }
+    }
+}
 fn content(kind: &str, slug: &str, category: Option<&str>, tags: Vec<&str>) -> Value {
     json!({"kind":kind,"slug":slug,"title":"测试内容","excerpt":"真实数据库集成测试","body_markdown":"","cover_media_id":null,"category_id":category,"tag_ids":tags,"featured":false,"sort_order":0,"seo_title":null,"seo_description":null,"gallery":[],"project":if kind=="project"{json!({"tech_stack":["Rust"],"project_stage":"building","started_on":"2026-01-01","ended_on":null,"repository_url":null,"demo_url":null})}else{Value::Null},"life":if kind=="life"{json!({"occurred_on":"2026-01-01","location_label":null})}else{Value::Null}})
 }
@@ -377,6 +406,7 @@ async fn authenticated_content_media_analytics_access_flow() {
     )
     .await;
     assert_eq!(status, 201, "{cat}");
+    assert_eq!(cat["data"]["content_count"], 0);
     let cat = cat["data"]["id"].as_str().unwrap();
     let (status, _, tag) = request(
         &app,
@@ -389,7 +419,20 @@ async fn authenticated_content_media_analytics_access_flow() {
     )
     .await;
     assert_eq!(status, 201, "{tag}");
+    assert_eq!(tag["data"]["content_count"], 0);
     let tag = tag["data"]["id"].as_str().unwrap();
+    let (status, _, second_category) = request(
+        &app,
+        "POST",
+        "/api/v1/admin/categories",
+        Some(json!({"kind":"blog","name":"工程实践","slug":"engineering","sort_order":1})),
+        Some(&cookie),
+        Some(&csrf),
+        true,
+    )
+    .await;
+    assert_eq!(status, 201, "{second_category}");
+    let second_category = second_category["data"]["id"].as_str().unwrap();
     let mut invalid = content("project", "wrong-category", Some(cat), vec![]);
     invalid["body_markdown"] = json!("正文");
     assert_eq!(
@@ -422,7 +465,20 @@ async fn authenticated_content_media_analytics_access_flow() {
     )
     .await;
     assert_eq!(status, 201, "{draft}");
+    assert_eq!(draft["data"]["cover_alt"], "");
+    assert_eq!(
+        draft["data"]["category_ids"],
+        json!([cat]),
+        "兼容单分类请求"
+    );
     let id = draft["data"]["id"].as_str().unwrap().to_owned();
+    assert_taxonomy_counts(
+        &app,
+        &cookie,
+        &[(cat, 1), (second_category, 0)],
+        &[(tag, 1)],
+    )
+    .await;
     let path = format!("/api/v1/admin/contents/{id}");
     assert_eq!(
         request(&app, "GET", "/api/v1/posts/first", None, None, None, false)
@@ -491,9 +547,12 @@ async fn authenticated_content_media_analytics_access_flow() {
     let mut edit = content("blog", "first", Some(cat), vec![tag]);
     edit.as_object_mut().unwrap().remove("kind");
     edit.as_object_mut().unwrap().remove("slug");
+    edit.as_object_mut().unwrap().remove("category_id");
+    edit["category_ids"] = json!([cat, second_category]);
     edit["version"] = json!(1);
     edit["body_markdown"] = json!(format!("# 正文\n![图片](media:{media_id})"));
     edit["cover_media_id"] = json!(media_id);
+    edit["cover_alt"] = json!("文章独立封面描述");
     let (a, b) = tokio::join!(
         request(
             &app,
@@ -542,10 +601,77 @@ async fn authenticated_content_media_analytics_access_flow() {
     )
     .await;
     assert_eq!(status, 200, "{published}");
+    assert_eq!(
+        published["data"]["category_ids"],
+        json!([cat, second_category])
+    );
+    assert_eq!(published["data"]["categories"].as_array().unwrap().len(), 2);
+    assert_taxonomy_counts(
+        &app,
+        &cookie,
+        &[(cat, 1), (second_category, 1)],
+        &[(tag, 1)],
+    )
+    .await;
     let first_published = published["data"]["published_at"].clone();
     let (status, _, public) =
         request(&app, "GET", "/api/v1/posts/first", None, None, None, false).await;
     assert_eq!(status, 200, "{public}");
+    assert_eq!(public["data"]["cover"]["alt"], "文章独立封面描述");
+    assert!(public["data"].get("cover_alt").is_none());
+    assert_eq!(public["data"]["categories"].as_array().unwrap().len(), 2);
+    assert!(public["data"].get("category_ids").is_none());
+    for category_slug in ["rust", "engineering"] {
+        let (status, _, filtered) = request(
+            &app,
+            "GET",
+            &format!("/api/v1/posts?category={category_slug}"),
+            None,
+            None,
+            None,
+            false,
+        )
+        .await;
+        assert_eq!(status, 200);
+        assert_eq!(filtered["meta"]["total"], 1, "任一已选分类均可筛选");
+        assert_eq!(
+            filtered["data"][0]["categories"].as_array().unwrap().len(),
+            2
+        );
+    }
+    let (_, _, public_categories) = request(
+        &app,
+        "GET",
+        "/api/v1/categories?kind=blog",
+        None,
+        None,
+        None,
+        false,
+    )
+    .await;
+    assert_eq!(public_categories["data"].as_array().unwrap().len(), 2);
+    assert_eq!(
+        request(
+            &app,
+            "DELETE",
+            &format!("/api/v1/admin/categories/{second_category}?version=1"),
+            None,
+            Some(&cookie),
+            Some(&csrf),
+            true
+        )
+        .await
+        .0,
+        409,
+        "次要分类仍被引用，不能删除"
+    );
+
+    let media_alt: String = sqlx::query_scalar("SELECT alt FROM media_files WHERE id=$1")
+        .bind(uuid::Uuid::parse_str(media_id).unwrap())
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(media_alt, "", "内容级描述不应改写共用媒体描述");
     assert!(public["data"].get("version").is_none());
     assert!(public["data"].get("cover_media_id").is_none());
     assert_eq!(
@@ -567,6 +693,173 @@ async fn authenticated_content_media_analytics_access_flow() {
         .await
         .0,
         400
+    );
+    // 多选创建、取消全部、移除其中一个分类；草稿删除后不干扰其他统计验收。
+    let mut multi = content("blog", "multi-categories", None, vec![tag]);
+    multi.as_object_mut().unwrap().remove("category_id");
+    multi["category_ids"] = json!([cat, second_category]);
+    let (status, _, created) = request(
+        &app,
+        "POST",
+        "/api/v1/admin/contents",
+        Some(multi.clone()),
+        Some(&cookie),
+        Some(&csrf),
+        true,
+    )
+    .await;
+    assert_eq!(status, 201, "{created}");
+    assert_eq!(
+        created["data"]["category_ids"],
+        json!([cat, second_category])
+    );
+    assert_taxonomy_counts(
+        &app,
+        &cookie,
+        &[(cat, 2), (second_category, 2)],
+        &[(tag, 2)],
+    )
+    .await;
+    let multi_id = created["data"]["id"].as_str().unwrap();
+    multi.as_object_mut().unwrap().remove("kind");
+    multi.as_object_mut().unwrap().remove("slug");
+    for (version, selected) in [(1, json!([])), (2, json!([second_category]))] {
+        multi["version"] = json!(version);
+        multi["category_ids"] = selected.clone();
+        let (status, _, updated) = request(
+            &app,
+            "PUT",
+            &format!("/api/v1/admin/contents/{multi_id}"),
+            Some(multi.clone()),
+            Some(&cookie),
+            Some(&csrf),
+            true,
+        )
+        .await;
+        assert_eq!(status, 200, "{updated}");
+        assert_eq!(updated["data"]["category_ids"], selected);
+        assert_eq!(updated["data"]["tag_ids"], json!([tag]));
+        assert_eq!(updated["data"]["category_id"], selected[0]);
+        assert_taxonomy_counts(
+            &app,
+            &cookie,
+            &[
+                (cat, 1),
+                (second_category, if version == 1 { 1 } else { 2 }),
+            ],
+            &[(tag, 2)],
+        )
+        .await;
+    }
+    assert_eq!(
+        request(
+            &app,
+            "DELETE",
+            &format!("/api/v1/admin/contents/{multi_id}?version=3"),
+            None,
+            Some(&cookie),
+            Some(&csrf),
+            true
+        )
+        .await
+        .0,
+        204
+    );
+    assert_taxonomy_counts(
+        &app,
+        &cookie,
+        &[(cat, 1), (second_category, 1)],
+        &[(tag, 1)],
+    )
+    .await;
+    // 关联操作支持归档文章；只改分类标签并校验版本，不改变正文和发布状态。
+    let mut bindings = content("blog", "taxonomy-actions", Some(cat), vec![tag]);
+    bindings["category_ids"] = json!([cat, second_category]);
+    bindings["body_markdown"] = json!("# 保留正文");
+    let (_, _, created) = request(
+        &app,
+        "POST",
+        "/api/v1/admin/contents",
+        Some(bindings),
+        Some(&cookie),
+        Some(&csrf),
+        true,
+    )
+    .await;
+    let binding_id = created["data"]["id"].as_str().unwrap();
+    let binding_path = format!("/api/v1/admin/contents/{binding_id}");
+    assert_eq!(
+        request(
+            &app,
+            "POST",
+            &format!("{binding_path}/status"),
+            Some(json!({"version":1,"status":"archived"})),
+            Some(&cookie),
+            Some(&csrf),
+            true
+        )
+        .await
+        .0,
+        200
+    );
+    let payload = json!({"version":2,"category_ids":[second_category],"tag_ids":[tag]});
+    let (status, _, updated) = request(
+        &app,
+        "PUT",
+        &format!("{binding_path}/taxonomy"),
+        Some(payload.clone()),
+        Some(&cookie),
+        Some(&csrf),
+        true,
+    )
+    .await;
+    assert_eq!(status, 200, "{updated}");
+    assert_eq!(updated["data"]["category_ids"], json!([second_category]));
+    assert_eq!(updated["data"]["category_id"], second_category);
+    assert_eq!(updated["data"]["tag_ids"], json!([tag]));
+    assert_eq!(updated["data"]["status"], "archived");
+    assert_eq!(updated["data"]["body_markdown"], "# 保留正文");
+    assert_eq!(
+        request(
+            &app,
+            "PUT",
+            &format!("{binding_path}/taxonomy"),
+            Some(payload),
+            Some(&cookie),
+            Some(&csrf),
+            true
+        )
+        .await
+        .0,
+        409
+    );
+    let (status, _, cleared) = request(
+        &app,
+        "PUT",
+        &format!("{binding_path}/taxonomy"),
+        Some(json!({"version":3,"category_ids":[second_category],"tag_ids":[]})),
+        Some(&cookie),
+        Some(&csrf),
+        true,
+    )
+    .await;
+    assert_eq!(status, 200, "{cleared}");
+    assert_eq!(cleared["data"]["category_ids"], json!([second_category]));
+    assert_eq!(cleared["data"]["tag_ids"], json!([]));
+    assert_eq!(cleared["data"]["status"], "archived");
+    assert_eq!(
+        request(
+            &app,
+            "DELETE",
+            &format!("{binding_path}?version=4"),
+            None,
+            Some(&cookie),
+            Some(&csrf),
+            true
+        )
+        .await
+        .0,
+        204
     );
     for kind in ["project", "life"] {
         let mut v = content(kind, kind, None, vec![]);

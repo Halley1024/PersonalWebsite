@@ -1,0 +1,19 @@
+.stack { display: grid; gap: 24px; }
+.heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+.heading h3 { font-size: 14px; color: var(--dim); font-weight: 500; }
+.heading small { color: var(--faint); font: 12px var(--mono); margin-left: 6px; }
+.heading button { padding: 7px 10px; min-height: 36px; font-size: 12px; }
+.options { display: flex; flex-wrap: wrap; gap: 10px; max-height: 280px; overflow-y: auto; padding: 3px; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.options button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border-strong); border-radius: 7px; padding: 8px 11px; min-height: 38px; font-size: 13px; background: transparent; color: var(--dim); overflow-wrap: anywhere; }
+.options button[aria-pressed="true"] { border-color: var(--accent-muted); background: var(--accent-soft); color: var(--accent); }
+.options button:hover:not(:disabled) { border-color: var(--accent); }
+.options button:disabled { opacity: .35; cursor: not-allowed; }
+.options button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hint { color: var(--faint); font-size: 12px; line-height: 1.8; margin-top: 12px; }
+.dialog label, .dialog input { font-size: 14px; }
+.dialog small { font-size: 12px; }
+.dialog > div:last-child { justify-content: space-between; gap: 24px; }
+.dialog > div:last-child button { min-width: 100px; min-height: 44px; font-size: 14px; }
+
+.selectionMark { display: grid; place-items: center; width: 16px; height: 16px; flex: 0 0 16px; border: 1px solid var(--border-strong); border-radius: 4px; }
+.options button[aria-pressed="true"] .selectionMark { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }

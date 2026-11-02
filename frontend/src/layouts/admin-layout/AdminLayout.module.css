@@ -20,7 +20,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--faint);
 }
 .topbar > div {
@@ -36,7 +36,7 @@
   font-style: normal;
 }
 .topbar time {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
 }
 .topbar a {
   display: flex;

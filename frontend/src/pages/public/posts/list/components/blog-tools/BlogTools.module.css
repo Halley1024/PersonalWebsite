@@ -8,6 +8,7 @@
 }
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
 }
@@ -80,23 +81,6 @@
   color: var(--warn);
   font-size: 12px;
 }
-@media (min-width: 961px) {
-  .tools {
-    flex-shrink: 0;
-    margin-top: 18px;
-    padding: 14px 18px;
-  }
-  .tags {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-top: 10px;
-  }
-  .tag {
-    flex-shrink: 0;
-    padding: 5px 12px;
-    white-space: nowrap;
-  }
-}
 @media (max-width: 640px) {
   .tools {
     padding: 16px;
@@ -105,6 +89,7 @@
     flex-wrap: wrap;
   }
   .searchField {
+    flex-basis: 100%;
     max-width: none;
   }
   .toolbar > .controlButton:last-child:not([type="submit"]) {

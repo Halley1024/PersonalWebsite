@@ -56,7 +56,8 @@
 .nav > a {
   position: relative;
   padding: 9px 16px;
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--dim);
   border-radius: 8px;
 }
@@ -131,4 +132,37 @@
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.contactButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 18px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  color: var(--accent);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.15s;
+}
+.contactButton:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.contactButton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.contactButton:disabled {
+  opacity: 0.5;
+  cursor: wait;
 }

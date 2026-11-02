@@ -51,3 +51,31 @@ export function transformMarkdownUrl(url: string) {
     return url;
   return "";
 }
+
+type HeadingNode = {
+  type: string;
+  tagName?: string;
+  value?: string;
+  properties?: Record<string, unknown>;
+  children?: HeadingNode[];
+};
+
+// 每次 Markdown 转换独立计数，避免 React 重渲染改变目录锚点。
+export function rehypeHeadingIds() {
+  return (tree: HeadingNode) => {
+    const counts = new Map<string, number>();
+    const text = (node: HeadingNode): string => node.type === "text"
+      ? node.value || ""
+      : (node.children || []).map(text).join("");
+    const visit = (node: HeadingNode) => {
+      if (node.type === "element" && /^h[1-6]$/.test(node.tagName || "")) {
+        const slug = headingSlug(text(node));
+        const count = counts.get(slug) || 0;
+        counts.set(slug, count + 1);
+        node.properties = { ...node.properties, id: count ? `${slug}-${count}` : slug };
+      }
+      node.children?.forEach(visit);
+    };
+    visit(tree);
+  };
+}

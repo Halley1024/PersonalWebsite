@@ -4,15 +4,21 @@
 
 ## 迁移清单
 
-| 版本 | 文件 | 内容 |
-| --- | --- | --- |
-| 0001 | `0001_create_site_settings.sql` | 站点设置及单例初始化；保留原有文件，未改写 |
-| 0002 | `0002_create_accounts_media_profile.sql` | admins、admin_sessions、media_files、site_profile；初始化空白资料 |
-| 0003 | `0003_create_content_taxonomy.sql` | categories、tags、content_items、project_details、life_details、content_tags、content_media |
+| 版本 | 文件                                       | 内容                                                                                         |
+| ---- | ------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| 0001 | `0001_create_site_settings.sql`          | 站点设置及单例初始化；保留原有文件，未改写                                                   |
+| 0002 | `0002_create_accounts_media_profile.sql` | admins、admin_sessions、media_files、site_profile；初始化空白资料                            |
+| 0003 | `0003_create_content_taxonomy.sql`       | categories、tags、content_items、project_details、life_details、content_tags、content_media  |
 | 0004 | `0004_create_audit_analytics_access.sql` | audit_logs、region_catalog、visit_events、analytics_daily、access_rules；初始化 unknown 区域 |
-| 0005 | `0005_create_query_indexes.sql` | 查询、媒体引用、会话清理、审计和访问统计索引 |
+| 0005 | `0005_create_query_indexes.sql`          | 查询、媒体引用、会话清理、审计和访问统计索引                                                 |
 
-共 17 张业务表；SQLx 另行维护 `_sqlx_migrations`。不创建默认管理员、密码、演示内容、虚构流量或未部署数据源的区域目录。唯一管理员后续由 `admin-create` 实现。
+| 0006 | `0006_create_analytics_history.sql` | 不含 IP 的历史统计事件与统一查询视图，支持年度按月统计；维护任务归档并保留 730 天 |
+
+| 0007 | `0007_add_content_cover_alt.sql` | 内容级封面描述；不修改共用媒体的描述 |
+
+| 0008 | `0008_add_content_categories.sql` | 内容分类多选及原有单分类数据迁移 |
+
+共 19 张业务表；SQLx 另行维护 `_sqlx_migrations`。不创建默认管理员、密码、演示内容、虚构流量或未部署数据源的区域目录。唯一管理员后续由 `admin-create` 实现。
 
 现有 `admin.sql` 是用户预留的空文件，保持不变；它不符合 SQLx 的版本命名规则，不参与迁移。
 

@@ -6,7 +6,9 @@ export const contentFields = z.object({
   excerpt: z.string().trim().min(1, "请输入摘要").max(300),
   body_markdown: z.string().max(200000),
   cover_media_id: nullableId,
-  category_id: nullableId,
+  cover_alt: z.string().max(200).default(""),
+  category_id: nullableId.optional(),
+  category_ids: z.array(z.uuid()).refine((ids) => new Set(ids).size === ids.length, "分类不能重复").optional(),
   tag_ids: z.array(z.uuid()).max(10),
   featured: z.boolean(),
   sort_order: z.number().int(),
@@ -42,6 +44,10 @@ export const contentFields = z.object({
     })
     .nullable(),
 });
+const withCategories = <T extends { category_id?: string | null; category_ids?: string[] }>(value: T) => {
+  const category_ids = value.category_ids ?? (value.category_id ? [value.category_id] : []);
+  return { ...value, category_ids, category_id: category_ids[0] ?? null };
+};
 export const createContentSchema = contentFields.extend({
   kind: z.enum(["blog", "project", "life"]),
   slug: z
@@ -49,7 +55,7 @@ export const createContentSchema = contentFields.extend({
     .min(1, "请输入 slug")
     .max(100)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "slug 仅支持小写英文、数字和连字符"),
-});
+}).transform(withCategories);
 export const updateContentSchema = contentFields.extend({
   version: z.number().int().positive(),
-});
+}).transform(withCategories);

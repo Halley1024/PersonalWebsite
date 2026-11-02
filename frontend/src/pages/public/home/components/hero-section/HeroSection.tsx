@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import type { PublicProfile } from "../../../../../shared/api/generated";
-import { ContactDialog } from "../../../../../shared/components/profile/contact-dialog/ContactDialog";
 import { Terminal } from "./Terminal";
 import styles from "./HeroSection.module.css";
 export function HeroSection({ profile }: { profile: PublicProfile }) {
-  const [contact, setContact] = useState(false);
   return (
     <section className={styles.hero}>
       <div>
@@ -35,14 +32,13 @@ export function HeroSection({ profile }: { profile: PublicProfile }) {
             查看我的作品
             <ArrowRight size={15} />
           </Link>
-          <button
-            type="button"
+          <Link
+            to="/about"
             className={`${styles.heroButton} ${styles.ghostButton}`}
-            onClick={() => setContact(true)}
           >
-            保持联系
+            了解我
             <ArrowUpRight size={15} />
-          </button>
+          </Link>
         </div>
         <div className={styles.bottom}>
           <span>LEARN. BUILD. SHARE.</span>
@@ -50,11 +46,6 @@ export function HeroSection({ profile }: { profile: PublicProfile }) {
         </div>
       </div>
       <Terminal profile={profile} />
-      <ContactDialog
-        open={contact}
-        onClose={() => setContact(false)}
-        profile={profile}
-      />
     </section>
   );
 }

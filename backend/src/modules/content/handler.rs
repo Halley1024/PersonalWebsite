@@ -180,3 +180,14 @@ pub async fn sitemap_handler(State(s): State<AppState>) -> AppResult<Response> {
     xml.push_str("</urlset>");
     Ok(([("content-type", "application/xml; charset=utf-8")], xml).into_response())
 }
+
+pub async fn taxonomy_handler(
+    State(s): State<AppState>,
+    Extension(a): Extension<Session>,
+    Path(id): Path<Uuid>,
+    Json(v): Json<super::dto::TaxonomyInput>,
+) -> AppResult<Response> {
+    Ok(response::one(
+        service::update_taxonomy_service(&s, a.admin_id, id, v).await?,
+    ))
+}

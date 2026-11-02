@@ -1,3 +1,4 @@
+import type { TaxonomySummary } from "../api/generated";
 import type { Kind } from "../api/content";
 export const kindNames: Record<Kind, string> = {
   blog: "博客",
@@ -18,3 +19,7 @@ export const stateNames: Record<string, string> = {
 };
 export const isKind = (value: unknown): value is Kind =>
   value === "blog" || value === "project" || value === "life";
+
+export function categoryNames(item: { categories?: TaxonomySummary[]; category: TaxonomySummary | null }) {
+  return (item.categories ?? (item.category ? [item.category] : [])).map((category) => category.name).join(" · ");
+}
